@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300" role="img" aria-label="Laptop and TV both join the same Wi-Fi router; the laptop then talks to the TV using adb on port 5555">
+  <rect width="900" height="300" rx="16" fill="#14161C"/>
+  <g font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+
+    <!-- laptop -->
+    <rect x="48" y="96" width="150" height="92" rx="8" fill="#242833" stroke="#5A6273" stroke-width="2"/>
+    <rect x="62" y="110" width="122" height="62" rx="4" fill="#0E1015"/>
+    <rect x="34" y="188" width="178" height="9" rx="4" fill="#5A6273"/>
+    <text x="123" y="222" fill="#E8ECF2" font-size="17" font-weight="600" text-anchor="middle">Your laptop</text>
+    <text x="123" y="244" fill="#98A0B0" font-size="14" text-anchor="middle">runs adb</text>
+
+    <!-- router -->
+    <rect x="392" y="120" width="116" height="52" rx="8" fill="#242833" stroke="#5A6273" stroke-width="2"/>
+    <circle cx="416" cy="146" r="5" fill="#7FD1A0"/>
+    <circle cx="436" cy="146" r="5" fill="#5A6273"/>
+    <path d="M450 118 q14 -16 28 0" fill="none" stroke="#7FD1A0" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M444 108 q20 -24 40 0" fill="none" stroke="#7FD1A0" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+    <text x="450" y="200" fill="#E8ECF2" font-size="17" font-weight="600" text-anchor="middle">Your Wi-Fi</text>
+    <text x="450" y="222" fill="#98A0B0" font-size="14" text-anchor="middle">the same network, not guest</text>
+
+    <!-- tv -->
+    <rect x="686" y="86" width="180" height="106" rx="8" fill="#242833" stroke="#5A6273" stroke-width="2"/>
+    <rect x="700" y="100" width="152" height="78" rx="4" fill="#0E1015"/>
+    <rect x="742" y="192" width="68" height="8" rx="4" fill="#5A6273"/>
+    <rect x="716" y="200" width="120" height="8" rx="4" fill="#5A6273"/>
+    <text x="776" y="232" fill="#E8ECF2" font-size="17" font-weight="600" text-anchor="middle">Your TV</text>
+    <text x="776" y="254" fill="#98A0B0" font-size="14" text-anchor="middle">debugging switched on</text>
+
+    <!-- links -->
+    <line x1="216" y1="146" x2="380" y2="146" stroke="#5A6273" stroke-width="2.5" stroke-dasharray="7 7"/>
+    <line x1="520" y1="146" x2="674" y2="146" stroke="#5A6273" stroke-width="2.5" stroke-dasharray="7 7"/>
+
+    <!-- adb channel -->
+    <path d="M123 268 L776 268" stroke="#7FD1A0" stroke-width="2.5"/>
+    <path d="M123 268 L123 252" stroke="#7FD1A0" stroke-width="2.5"/>
+    <path d="M776 268 L776 252" stroke="#7FD1A0" stroke-width="2.5"/>
+    <rect x="376" y="254" width="148" height="28" rx="14" fill="#14161C"/>
+    <text x="450" y="273" fill="#7FD1A0" font-size="14" font-weight="600" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">adb : port 5555</text>
+
+    <text x="450" y="42" fill="#E8ECF2" font-size="19" font-weight="600" text-anchor="middle">Both devices join the same Wi-Fi.</text>
+    <text x="450" y="66" fill="#98A0B0" font-size="15" text-anchor="middle">Then the laptop talks to the TV directly. Nothing leaves your house.</text>
+  </g>
+</svg>

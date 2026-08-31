@@ -1,0 +1,6 @@
+out/
+gen/
+classes/
+dex/
+*.class
+.DS_Store

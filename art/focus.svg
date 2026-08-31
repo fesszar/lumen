@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 270" width="900" height="270" role="img" aria-label="Three tile states: rest, focused with a white ring and larger scale, and pressed">
+  <rect width="900" height="270" rx="16" fill="#14161C"/>
+  <g font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+    <text x="450" y="40" fill="#E8ECF2" font-size="19" font-weight="600" text-anchor="middle">There is no cursor. Focus is the entire interface.</text>
+
+    <!-- rest -->
+    <rect x="86" y="78" width="196" height="110" rx="14" fill="#5F7099" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="2" opacity="0.68"/>
+    <text x="184" y="212" fill="#98A0B0" font-size="15" text-anchor="middle">Rest</text>
+    <text x="184" y="234" fill="#6E7686" font-size="13" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">scale 1.00 · 68% opacity</text>
+
+    <!-- focused -->
+    <rect x="348" y="68" width="214" height="120" rx="15" fill="#5F7099" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2"/>
+    <rect x="343" y="63" width="224" height="130" rx="18" fill="none" stroke="#FFFFFF" stroke-opacity="0.95" stroke-width="4"/>
+    <text x="455" y="212" fill="#FFFFFF" font-size="15" font-weight="600" text-anchor="middle">Focused</text>
+    <text x="455" y="234" fill="#98A0B0" font-size="13" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">scale 1.09 · ring 4px · 220ms</text>
+
+    <!-- pressed -->
+    <rect x="626" y="76" width="200" height="112" rx="14" fill="#475473" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2"/>
+    <rect x="622" y="72" width="208" height="120" rx="16" fill="none" stroke="#FFFFFF" stroke-opacity="0.95" stroke-width="4"/>
+    <text x="726" y="212" fill="#98A0B0" font-size="15" text-anchor="middle">Pressed</text>
+    <text x="726" y="234" fill="#6E7686" font-size="13" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">scale 1.02 · 90ms · then launch</text>
+  </g>
+</svg>

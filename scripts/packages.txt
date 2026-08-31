@@ -1,0 +1,46 @@
+# Lumen debloat package list — TCL Smart TV Pro (Android 11), verified.
+# Format: batch<TAB>package<TAB>description
+batch1	com.tcl.waterfall.overseas	TCL waterfall engine - the home-screen promo and recommendation rows
+batch1	com.tcl.overseasappshow	TCL app-promotion showcase
+batch1	com.tcl.bi	TCL usage analytics upload
+batch1	com.tcl.logkit	TCL device log collection
+batch1	com.tcl.t_solo	TCL marketing app
+batch1	com.tcl.esticker	In-store demo sticker overlay
+batch1	com.tcl.ocean.instructions	First-run demo reel
+batch1	com.tcl.factory.view	Factory test menu
+batch1	com.google.android.apps.tv.dreamx	Google TV ambient screensaver
+batch1	android.autoinstalls.config.google.gtvpai	Google TV silent installer for sponsored apps
+batch2	com.google.android.katniss	Google voice search service - biggest memory win
+batch2	com.google.android.tv.assistant	Google Assistant front end
+batch2	com.tcl.assistant	TCL voice assistant
+batch2	com.tcl.miracast	Miracast screen mirroring
+batch2	com.tcl.MultiScreenInteraction_TV	TCL multi-screen service
+batch2	com.tcl.messagebox	TCL marketing message inbox
+batch2	com.tcl.usercenter	TCL account centre
+batch3	com.tcl.channelplus	TCL Channel - ad-supported streaming
+batch3	com.tcl.tv.tclhome_passive	Home-screen passive promo content
+batch3	com.tcl.partnercustomizer	Partner preload installer
+batch3	com.google.android.feedback	Crash and feedback reporting
+batch3	com.google.android.partnersetup	Partner attribution reporting
+batch3	com.google.android.tungsten.setupwraith	Google TV setup wizard
+batch3	com.google.android.onetimeinitializer	One-time first-setup initialiser
+batch3	com.tcl.initsetup	TCL setup wizard
+batch3	com.tcl.useragreement	Terms-acceptance prompts
+batch3	com.tcl.keyhelp	On-screen remote-key help
+batch4	com.tcl.guard	TCL guard cleaner and memory manager
+batch4	com.android.messaging	SMS app
+batch4	com.android.camera2	Camera app
+batch4	com.android.printspooler	Print queue
+batch4	com.android.dynsystem	Dynamic System Updates
+batch4	com.android.cts.ctsshim	Empty compliance-test stub
+batch4	com.android.cts.priv.ctsshim	Empty compliance-test stub, privileged
+batch4	org.chromium.webview_shell	WebView developer test shell
+batch4	com.tcl.gamebar	Gaming overlay
+batch4	com.tcl.micmanager	Far-field microphone manager
+batch5	com.google.android.videos	Google TV movie store
+batch5	com.seraphic.openinet.pre	Seraphic OpenInet preload - behaves like adware
+batch5	com.tcl.browser	TCL web browser
+batch5	com.tcl.gallery	TCL photo viewer
+batch5	com.tcl.ui_mediaCenter	TCL USB media player
+batch5	com.google.android.apps.nbu.smartconnect.tv	Phone-assisted setup
+batch5	com.tcl.xian.StartandroidService	Undocumented TCL startup service
