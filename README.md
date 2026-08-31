@@ -7,9 +7,22 @@
 No ad rows. No "recommended for you". No content you didn't ask for.
 Your apps, your inputs, and nothing else.
 
-![Lumen home screen](screenshots/01-home.png)
+![Before and after](screenshots/00-before-after.png)
 
 </div>
+
+---
+
+## Before and after
+
+<table>
+<tr>
+<td width="50%"><img src="screenshots/00-before.png" alt="Google TV home screen with a full-width Prime Video advert across the top"><br><sub><b>Before.</b> The first thing on the home screen is an advert for something you don't own. Your own apps are the small circles underneath it. The two lower rows are blurred here — they were a list of installed apps and a viewing history, and neither belongs in a public README.</sub></td>
+<td width="50%"><img src="screenshots/01-home.png" alt="Lumen home screen: one row of large app tiles on a dark frosted shelf"><br><sub><b>After.</b> Your apps, at the size you can actually see from a sofa, with the HDMI inputs one press below. Nothing else.</sub></td>
+</tr>
+</table>
+
+**One caveat, so the comparison is honest:** the "before" was taken partway through, after the TCL advertising packages were already switched off. What you're seeing is Google TV's *own* promotional machinery — which is the part a launcher swap fixes, and the reason a launcher swap is worth doing at all. A completely untouched set has more rows than this, not fewer.
 
 ---
 
