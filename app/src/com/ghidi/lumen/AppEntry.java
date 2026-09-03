@@ -34,6 +34,11 @@ public class AppEntry {
         this.tint = tint;
     }
 
+    /** A pinned app that is no longer installed. Draws as an outline, not as a gap. */
+    public static AppEntry placeholder(String pkg, String label) {
+        return new AppEntry(pkg, label, null, false, Color.parseColor("#2A2F39"));
+    }
+
     /**
      * The shelf is ordered, not alphabetical. These come first, in this order -
      * the things actually opened, rather than whatever sorts to the top.
@@ -58,11 +63,32 @@ public class AppEntry {
         return Integer.MAX_VALUE;
     }
 
-    /** The shelf: everything, minus what the user hid in Settings. */
+    /**
+     * The shelf: everything, minus what the user hid in Settings, in the user's own order
+     * where they have set one. Anything installed but not named in that order follows after,
+     * so a newly installed app appears at the end rather than not appearing at all.
+     */
     public static List<AppEntry> load(Context c) {
         List<AppEntry> all = loadAll(c);
+        List<AppEntry> visible = new ArrayList<AppEntry>();
+        for (AppEntry a : all) {
+            Prefs.rememberLabel(c, a.pkg, a.label);
+            if (!Prefs.isHidden(c, a.pkg)) visible.add(a);
+        }
+
+        List<String> order = Prefs.order(c);
+        if (order.isEmpty()) return visible;
+
+        Map<String, AppEntry> byPkg = new LinkedHashMap<String, AppEntry>();
+        for (AppEntry a : visible) byPkg.put(a.pkg, a);
+
         List<AppEntry> out = new ArrayList<AppEntry>();
-        for (AppEntry a : all) if (!Prefs.isHidden(c, a.pkg)) out.add(a);
+        for (String pkg : order) {
+            AppEntry a = byPkg.remove(pkg);
+            if (a != null) out.add(a);
+            else if (!Prefs.isHidden(c, pkg)) out.add(placeholder(pkg, Prefs.rememberedLabel(c, pkg)));
+        }
+        out.addAll(byPkg.values());
         return out;
     }
 

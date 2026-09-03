@@ -7,6 +7,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /** A focusable app tile: art, a white ring on focus, scale and lift. */
@@ -21,11 +22,23 @@ public class Tile extends FrameLayout {
 
     public final AppEntry app;
     private float radius = RADIUS;
+    private boolean missing = false;
 
     public Tile(Context c, AppEntry app, float radiusDesign) {
+        this(c, app, radiusDesign, false);
+    }
+
+    /**
+     * missing=true is a pinned app that is no longer installed - uninstalled, or disabled by
+     * the debloat. It stays on the shelf as an outline instead of disappearing, because a
+     * shelf that quietly reorders itself between boots destroys the muscle memory this
+     * launcher exists to protect.
+     */
+    public Tile(Context c, AppEntry app, float radiusDesign, boolean missing) {
         super(c);
         this.app = app;
         this.radius = radiusDesign;
+        this.missing = missing;
 
         setFocusable(true);
         setFocusableInTouchMode(false);
@@ -37,7 +50,39 @@ public class Tile extends FrameLayout {
 
         // Screen readers announce this. Without it TalkBack reads nothing at all -
         // the tile is a picture with no text in it.
-        setContentDescription(app.label);
+        setContentDescription(missing ? app.label + ", not installed" : app.label);
+
+        if (missing) {
+            LinearLayout col = new LinearLayout(c);
+            LayoutParams clp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+            clp.gravity = Gravity.CENTER;
+            col.setLayoutParams(clp);
+            col.setOrientation(LinearLayout.VERTICAL);
+            col.setGravity(Gravity.CENTER);
+
+            TextView n = new TextView(c);
+            n.setText(app.label);
+            n.setGravity(Gravity.CENTER);
+            n.setSingleLine(true);
+            n.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            n.setTextColor(Ui.alphaWhite(0.94f));
+            n.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 21));
+            n.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
+            col.addView(n);
+
+            TextView s = new TextView(c);
+            s.setText("Not installed");
+            s.setGravity(Gravity.CENTER);
+            s.setSingleLine(true);
+            s.setTextColor(Ui.alphaWhite(0.72f));
+            s.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 18));
+            s.setPadding(0, Ui.px(c, 5), 0, 0);
+            s.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
+            col.addView(s);
+
+            addView(col);
+            return;
+        }
 
         Drawable art = app.art;
         if (art != null) {
@@ -74,7 +119,10 @@ public class Tile extends FrameLayout {
         }
     }
 
+    public boolean isMissing() { return missing; }
+
     private Drawable face(boolean focused, float r) {
+        if (missing) return Ui.dashed(getContext(), r);
         return Ui.roundRect(getContext(), app.tint, r, 1f,
                 Ui.alphaWhite(focused ? 0.55f : 0.16f));
     }
@@ -104,5 +152,25 @@ public class Tile extends FrameLayout {
                      .setDuration(ms).setInterpolator(Ui.EASE).start();
         }
         setElevation(Ui.px(c, focused ? 30 : 4));
+    }
+
+    /**
+     * The press. The tile goes IN, not out - a focused tile is already scaled up, so growing
+     * it further reads as more focus rather than as a commitment. Between one and four seconds
+     * pass before the app's own splash appears; without this the remote feels dead.
+     */
+    public void applyPressed() {
+        Context c = getContext();
+        int ms = Prefs.motionMs(c);
+        animate().cancel();
+        float target = Ui.FOCUS_SCALE * 0.94f;
+        if (ms == 0) {
+            setScaleX(target);
+            setScaleY(target);
+        } else {
+            animate().scaleX(target).scaleY(target)
+                     .setDuration(Math.max(90, ms / 2))
+                     .setInterpolator(Ui.EASE).start();
+        }
     }
 }

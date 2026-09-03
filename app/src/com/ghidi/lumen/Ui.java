@@ -46,8 +46,27 @@ public final class Ui {
     }
 
     public static float sp(Context c, float designPx) {
-        // text sized in the same 1920 space, applied as raw pixels
+        // text sized in the same 1920 space, applied as raw pixels, then scaled by the
+        // launcher's own text-size setting so "Large" moves every label at once.
+        return designPx * s(c) * Prefs.textMult(c);
+    }
+
+    /** Text that must not grow with the text-size setting - a fixed-width plate, say. */
+    public static float spFixed(Context c, float designPx) {
         return designPx * s(c);
+    }
+
+    /**
+     * The outline used for a pinned app that is no longer installed. Dashed, so it reads as
+     * a gap that is being held open rather than as a tile that failed to draw.
+     */
+    public static GradientDrawable dashed(Context c, float radiusDesign) {
+        GradientDrawable g = new GradientDrawable();
+        g.setShape(GradientDrawable.RECTANGLE);
+        g.setColor(alphaWhite(0.06f));
+        g.setCornerRadius(px(c, radiusDesign));
+        g.setStroke(Math.max(1, px(c, 2f)), alphaWhite(0.34f), px(c, 12f), px(c, 9f));
+        return g;
     }
 
     public static int alphaWhite(float a) {

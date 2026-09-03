@@ -36,6 +36,91 @@ Two things that work together, and either one is useful on its own.
 
 **A launcher** to replace the home screen once the ads underneath it are gone. About 900 lines of plain Java, no frameworks, no analytics, no network access of any kind.
 
+
+---
+
+## Version 2
+
+The first version was a shelf of apps and nothing else. That was the point, and most of it survives. But a round of research and a set of user flows turned up eight things worth changing, and one thing that turned out to be impossible.
+
+<table>
+<tr>
+<td width="50%"><img src="screenshots/v2/01-home.png" alt="Lumen v2 home screen with a Carry on row above the app shelf"><br><sub><b>Home.</b> A "Carry on" row above the shelf, ports named by what is plugged into them, and a permanent hint line naming what up, down and right do.</sub></td>
+<td width="50%"><img src="screenshots/v2/04-settings-choices.png" alt="Settings screen showing four groups on the left and options with visible value pills on the right"><br><sub><b>Settings.</b> Nine flat rows became four named groups, and every option shows its values instead of cycling one per press of OK.</sub></td>
+</tr>
+</table>
+
+### The thing that could not be built
+
+The headline idea was a resume card: *Slow Horses, Season 4 Episode 2, 31 minutes left.* Resume state is the single most-cited complaint about television home screens, so it looked like the obvious win.
+
+It cannot be done by a sideloaded launcher, and the television says so plainly:
+
+```
+$ adb shell pm list permissions -f | grep -A4 ACCESS_ALL_EPG_DATA
++ permission:com.android.providers.tv.permission.ACCESS_ALL_EPG_DATA
+  package:com.android.providers.tv
+  protectionLevel:signature|privileged
+```
+
+Per-title resume lives in TvProvider's `watch_next_program` table. Without `ACCESS_ALL_EPG_DATA` a caller sees only the rows it wrote itself, and that permission is `signature|privileged` — a system app, or nothing. Lumen installs to `/data/app` with ordinary flags, so it would read an empty table for ever. Google TV Home can do it because it is privileged. We cannot.
+
+MediaSession is not a way round it either. Netflix's session survives being closed, but with `metadata: null` and `state=STOPPED` — no title, no position.
+
+So the card became a **Carry on row**: the three apps you opened most recently, and when. That is something the launcher honestly knows, because it did the launching. Not as good as the idea. True, though, which the idea was not.
+
+### What else changed
+
+| | |
+|---|---|
+| **Carry on row** | The three most recently opened apps, with when. Replaces the resume card above. |
+| **A hint line that stays** | Up, down and right, named, along the bottom. Not a dismissible first-run tour — the person who needs it is rarely the person who set this up. |
+| **The big caption is gone** | The focused app's name no longer repeats in 44px under the shelf. It said what the focus ring already said, and screen readers read it twice. |
+| **Ports named by device** | "HDMI 2 · PlayStation 5". The port number stays, so you still know which socket you are switching to. Named from Settings › What is on Home › Name your inputs. |
+| **Launching says so** | The tile presses in, the shelf dims, and a line names the app. Replaces a Toast that sighted users missed and the screen reader read over itself. |
+| **A shelf during cold start** | Placeholder tiles at final size while banners load, so the layout cannot jump under a press. |
+| **Choices in a list** | Four groups; every option shows its values as pills. Cycling on OK hides the option set until you have already pressed past it. |
+| **Reordering** | Apps on the shelf can be picked up and moved. The held tile lifts, so the same two keys never do two things without saying which. |
+| **A pinned app that is gone** | Stays as an outline rather than vanishing. A shelf that quietly reorders itself between boots is what destroys muscle memory. |
+| **A notice on first boot** | Plain language for whoever wakes up to a changed television, with the way back given the same weight as the way forward. |
+| **Save and load your settings** | A small text file under the app's own folder, to copy to another TV or keep before a factory reset. |
+
+<table>
+<tr>
+<td width="33%"><img src="screenshots/v2/06-cold-start.png" alt="Cold start showing placeholder tiles and a Loading your apps line"><br><sub>Cold start.</sub></td>
+<td width="33%"><img src="screenshots/v2/07-reorder.png" alt="Apps on the shelf screen with one tile lifted for moving"><br><sub>Reordering.</sub></td>
+<td width="33%"><img src="screenshots/v2/08-missing-app.png" alt="Shelf with an outlined tile reading Spotify, Not installed"><br><sub>A pinned app that is gone.</sub></td>
+</tr>
+</table>
+
+### Measured, not asserted
+
+Contrast sampled from screenshots taken off the television itself, not from the palette:
+
+| Element | Ratio |
+|---|---|
+| App name under a tile | 9.35:1 |
+| Carry on — app name | 11.61:1 |
+| Carry on — timestamp | 8.30:1 |
+| Hint line | 6.97:1 |
+| Settings row title and help | 6.49:1 |
+| Settings row value | 7.36:1 |
+| Clock, Settings pill | 9.87:1, 9.94:1 |
+| App name, high contrast on | 18.72:1 |
+
+Every focusable stop on Home, Settings and Apps on the shelf carries a label — `uiautomator` reports 0 unlabelled across all three.
+
+### Three bugs worth naming
+
+They cost hours, and all three are the kind that look like they cannot possibly be the problem.
+
+**A key collision took the launcher down on every OK press.** `Prefs` stored the on/off switch for the Carry on row as a boolean under `"recents"`; `Recents` stored its list as a string under the same key in the same preferences file. Reading one as the other threw `ClassCastException` and killed the process before the launch could run.
+
+**One app filled the whole screen.** With app names set to "Focused only", the wrapper function returns the tile itself rather than a column — and the next line overwrote the tile's fixed size with `WRAP_CONTENT`, letting it inflate to its banner's intrinsic size. Latent in v1 too.
+
+**The settings groups were unreachable by remote.** They were clickable but never focusable, and the option rows swallow left and right to change values. Nothing could move focus into the list. Up from the first option now goes there.
+
+
 Built and tested on a **TCL Smart TV Pro (Android 11)**. The launcher should work on any Android TV running 8.0 or later. The debloat package list is TCL-specific, but [the method](docs/02-debloat.md) transfers to any brand.
 
 ---
