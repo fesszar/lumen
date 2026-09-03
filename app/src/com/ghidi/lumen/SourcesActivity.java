@@ -148,7 +148,7 @@ public class SourcesActivity extends Activity {
         foot.setGravity(Gravity.CENTER_VERTICAL);
         foot.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         foot.addView(hint(c, "◀▶", "Choose an input", false));
-        foot.addView(hint(c, "OK", "Rename it", true));
+        foot.addView(hint(c, "OK", "Choose what is plugged in", true));
         foot.addView(hint(c, "Back", "Home", true));
         content.addView(foot);
 
@@ -210,8 +210,8 @@ public class SourcesActivity extends Activity {
         String given = Prefs.sourceName(this, p.port);
         headline.setText(given.length() > 0 ? given : p.port);
         sub.setText(given.length() > 0
-                ? p.port + "  ·  press OK to change the name"
-                : "Press OK to name what is plugged into " + p.port);
+                ? p.port + "  ·  press OK to change it"
+                : "Press OK to say what is plugged into " + p.port);
     }
 
     private View card(final Context c, final Port p, final int index) {
@@ -284,31 +284,69 @@ public class SourcesActivity extends Activity {
     /**
      * Naming an input, with a remote that only has a D-pad.
      *
-     * A dialog with a text field is a trap on a television: once the field has focus the
-     * on-screen keyboard takes the D-pad, so down and right never reach the Save button and
-     * the only way out is Back. Measured on this TV - focus stayed on the field through both.
+     * A text field is the wrong default here. Once it has focus the on-screen keyboard owns
+     * the D-pad, so down and right never reach Save - measured on this television, twice -
+     * and the Done key does not fire on an empty field, which is exactly how a name gets
+     * removed. Both routes exist and both are awkward.
      *
-     * So the keyboard's own Done key commits. Back closes the keyboard and then down and
-     * right do reach Save - which is the route that has to work, because Done does NOT fire
-     * on an empty field, and an empty field is exactly how a name gets removed. Both routes
-     * are spelled out in the dialog rather than left to be discovered.
+     * So OK opens a list instead. Almost everything plugged into a television is one of a
+     * dozen things, and picking one is a single press with no keyboard at all. Typing is
+     * still there for the twelve-and-first case, and removing a name is its own item rather
+     * than a trick involving an empty box.
      */
+    private static final String[] HDMI_DEVICES = {
+            "Sky box", "Sky Stream", "Virgin Media box", "Freeview box",
+            "PlayStation", "Xbox", "Nintendo Switch",
+            "Soundbar", "AV receiver",
+            "Blu-ray player", "DVD player",
+            "Apple TV box", "Fire TV Stick", "Chromecast",
+            "Laptop", "PC", "Camera"
+    };
+
+    private static final String[] TUNER_SOURCES = {
+            "Freeview", "Freesat", "Aerial", "Satellite", "Cable"
+    };
+
     private void rename(final Port p) {
+        boolean tuner = !p.port.startsWith("HDMI");
+        final String[] common = tuner ? TUNER_SOURCES : HDMI_DEVICES;
+        final boolean named = Prefs.sourceName(this, p.port).length() > 0;
+
+        final List<String> items = new ArrayList<String>();
+        for (String d : common) items.add(d);
+        items.add("Type a name\u2026");
+        if (named) items.add("Remove the name");
+        final String[] arr = items.toArray(new String[0]);
+
+        new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(tuner ? "What does " + p.port + " receive?"
+                                : "What is plugged into " + p.port + "?")
+                .setItems(arr, new android.content.DialogInterface.OnClickListener() {
+                    public void onClick(android.content.DialogInterface d, int which) {
+                        String choice = arr[which];
+                        if (choice.equals("Type a name\u2026")) { typeName(p); return; }
+                        if (choice.equals("Remove the name")) { commit(p, ""); return; }
+                        commit(p, choice);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    /** The long way round, for a device that is not on the list. */
+    private void typeName(final Port p) {
         final EditText input = new EditText(this);
         input.setText(Prefs.sourceName(this, p.port));
-        input.setHint("Sky box, PlayStation, soundbar...");
+        input.setHint("What is plugged in?");
         input.setSingleLine(true);
         input.setSelectAllOnFocus(true);
         input.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
-        input.setContentDescription("Name for " + p.port
-                + ". Type a name and press Done. To remove the name, clear the box, press Back "
-                + "to close the keyboard, then choose Save.");
+        input.setContentDescription("Name for " + p.port + ". Type a name and press Done.");
 
         final android.app.AlertDialog d = new android.app.AlertDialog.Builder(
                 this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                .setTitle("What is plugged into " + p.port + "?")
-                .setMessage("Type a name and press Done.\n\nTo go back to just the port "
-                        + "number: clear the box, press Back to close the keyboard, then Save.")
+                .setTitle("Name for " + p.port)
+                .setMessage("Type a name and press Done on the keyboard.")
                 .setView(input)
                 .setPositiveButton("Save", new android.content.DialogInterface.OnClickListener() {
                     public void onClick(android.content.DialogInterface di, int w) {
@@ -329,8 +367,6 @@ public class SourcesActivity extends Activity {
                 return false;
             }
         });
-        // A bare Enter or OK on the field commits too, for remotes whose keyboard sends a key
-        // event rather than an editor action.
         input.setOnKeyListener(new View.OnKeyListener() {
             public boolean onKey(View v, int code, android.view.KeyEvent e) {
                 if (e.getAction() != android.view.KeyEvent.ACTION_UP) return false;
@@ -343,7 +379,6 @@ public class SourcesActivity extends Activity {
                 return false;
             }
         });
-
         d.show();
         input.requestFocus();
     }

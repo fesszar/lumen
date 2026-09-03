@@ -119,7 +119,15 @@ Every focusable stop on Home, Settings and Apps on the shelf carries a label —
 </tr>
 </table>
 
-A dialog with a text field is a trap on a television, and this one took three attempts to get right. Once the field has focus the on-screen keyboard owns the D-pad, so **down and right never reach the Save button** — measured, not assumed. The keyboard's Done key commits instead. But Done does not fire on an *empty* field, and an empty field is exactly how you remove a name, so the other route has to work too: Back closes the keyboard, then down and right reach Save. Both are spelled out in the dialog rather than left to be found.
+OK opens a list, not a keyboard.
+
+<img src="screenshots/v2/13-name-picker.png" alt="A list dialog asking what is plugged into HDMI 2, with Sky box, PlayStation, Xbox and others" width="70%">
+
+This took four attempts, and the first three are worth recording because they are all the same mistake in different clothes.
+
+A dialog with a text field is a trap on a television. Once the field has focus the on-screen keyboard owns the D-pad, so **down and right never reach the Save button** — measured on the TV, both directions, twice. Committing on the keyboard's Done key fixes typing, but Done does not fire on an *empty* field, and an empty field was how you removed a name. Closing the keyboard with Back does free the D-pad to reach Save, so the dialog was usable — by a route nobody would guess.
+
+The answer was to stop asking for text. Almost everything plugged into a television is one of a dozen things, so picking one is a single press with no keyboard at all. Typing is still there for the thirteenth case, and removing a name is its own item rather than a trick involving an empty box. The tuner gets its own list — Freeview, Freesat, aerial, satellite, cable — because "what is plugged into the antenna socket" is a different question.
 
 ### Three bugs worth naming
 
