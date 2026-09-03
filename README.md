@@ -79,7 +79,7 @@ So the card became a **Carry on row**: the three apps you opened most recently, 
 | **Ports named by device** | "HDMI 2 · PlayStation 5". The port number stays, so you still know which socket you are switching to. Named from Settings › What is on Home › Name your inputs. |
 | **Launching says so** | The tile presses in, the shelf dims, and a line names the app. Replaces a Toast that sighted users missed and the screen reader read over itself. |
 | **A shelf during cold start** | Placeholder tiles at final size while banners load, so the layout cannot jump under a press. |
-| **Choices in a list** | Four groups; every option shows its values as pills. Cycling on OK hides the option set until you have already pressed past it. |
+| **Choices in a list** | Four groups; every option shows its values as pills. Cycling on OK hides the option set until you have already pressed past it. **Left goes back to the groups**, OK switches a two-value option or opens a list for a longer one. |
 | **Reordering** | Apps on the shelf can be picked up and moved. The held tile lifts, so the same two keys never do two things without saying which. |
 | **A pinned app that is gone** | Stays as an outline rather than vanishing. A shelf that quietly reorders itself between boots is what destroys muscle memory. |
 | **A notice on first boot** | Plain language for whoever wakes up to a changed television, with the way back given the same weight as the way forward. |
@@ -128,6 +128,18 @@ This took four attempts, and the first three are worth recording because they ar
 A dialog with a text field is a trap on a television. Once the field has focus the on-screen keyboard owns the D-pad, so **down and right never reach the Save button** — measured on the TV, both directions, twice. Committing on the keyboard's Done key fixes typing, but Done does not fire on an *empty* field, and an empty field was how you removed a name. Closing the keyboard with Back does free the D-pad to reach Save, so the dialog was usable — by a route nobody would guess.
 
 The answer was to stop asking for text. Almost everything plugged into a television is one of a dozen things, so picking one is a single press with no keyboard at all. Typing is still there for the thirteenth case, and removing a name is its own item rather than a trick involving an empty box. The tuner gets its own list — Freeview, Freesat, aerial, satellite, cable — because "what is plugged into the antenna socket" is a different question.
+
+### What using it changed
+
+The first build of this screen spent left and right on changing values. That left the way *out* of an option list with nowhere to go but up from the first row — which nobody guesses, and which is not how any other television menu on earth behaves. Left is back. It is not negotiable and it should not have taken being told.
+
+So the controls moved: **left always returns to the groups**, and **OK acts** — a two-value option switches in one press, because both values are already on screen and making a switch cost three presses to satisfy a navigation rule is a bad trade; anything longer opens a list with the current value marked.
+
+Two smaller things came out of the same look:
+
+**The panel bottom-left could not be focused, and looked like it should be.** It wore the same rounded plate and border as the group rows above it — a promise the screen cannot keep, because there is nothing to press. It is a rule and a caption now, and reads as the legend it always was.
+
+**The selected group was not distinct enough.** Selected and merely-focused differed by about 14% white, which is invisible from a sofa. Three states now differ three ways: a bright accent bar down the leading edge marks the group whose options are showing and survives focus moving away, the focus ring marks where the cursor is, and the plate lifts under both.
 
 ### Three bugs worth naming
 

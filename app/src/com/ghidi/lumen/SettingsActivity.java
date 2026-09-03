@@ -286,6 +286,16 @@ public class SettingsActivity extends Activity {
             r.setContentDescription(groups.get(i).name + ", "
                     + groups.get(i).opts.size() + " options. Right to open them.");
 
+            // A bar down the leading edge. The background tint alone could not answer "which
+            // group is open" once focus moved into the options - the two states looked almost
+            // the same from a sofa.
+            final View accent = new View(c);
+            LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(
+                    Ui.px(c, 5), Ui.px(c, 30));
+            alp.rightMargin = Ui.px(c, 16);
+            accent.setLayoutParams(alp);
+            r.addView(accent);
+
             final TextView t = new TextView(c);
             t.setText(groups.get(i).name);
             t.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 23));
@@ -300,10 +310,10 @@ public class SettingsActivity extends Activity {
             n.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             r.addView(n);
 
-            paintGroup(r, t, n, on, false);
+            paintGroup(r, accent, t, n, on, false);
             r.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                 public void onFocusChange(View v, boolean has) {
-                    paintGroup(r, t, n, idx == group, has);
+                    paintGroup(r, accent, t, n, idx == group, has);
                     // Switching on focus, not on OK: the options appear as you walk the list,
                     // so you can see what a group holds before committing to it.
                     if (has && idx != group) { group = idx; focusedRow = 0; buildRows(c, false); repaintGroups(); }
@@ -320,23 +330,37 @@ public class SettingsActivity extends Activity {
         linkGroupFocus();
     }
 
-    private void paintGroup(LinearLayout r, TextView t, TextView n, boolean selected, boolean focused) {
+    /**
+     * Three states, told apart three ways.
+     *
+     * Selected but not focused - the group whose options are on the right - keeps a bright
+     * accent bar and a lifted plate. Focused adds the ring the whole launcher uses. Neither
+     * carries the load alone, because a tint difference of 14% white is invisible across a
+     * room, which is what this looked like before.
+     */
+    private void paintGroup(LinearLayout r, View accent, TextView t, TextView n,
+                            boolean selected, boolean focused) {
         Context c = this;
-        r.setBackground(Ui.roundRect(c, Ui.alphaWhite(selected ? 0.20f : 0.06f), 16f, 1f,
-                Ui.alphaWhite(selected ? 0.46f : 0.13f)));
+        float fill = selected ? (focused ? 0.30f : 0.22f) : (focused ? 0.16f : 0.05f);
+        r.setBackground(Ui.roundRect(c, Ui.alphaWhite(fill), 16f, 1f,
+                Ui.alphaWhite(selected ? 0.50f : 0.12f)));
         r.setForeground(focused
                 ? Ui.ring(c, 16f, Prefs.highContrast(c) ? 6f : 4f, Ui.alphaWhite(0.95f))
                 : Ui.ring(c, 16f, 0f, Color.TRANSPARENT));
-        t.setTextColor(Ui.alphaWhite(selected || focused ? 1f : 0.84f));
-        n.setTextColor(Ui.alphaWhite(selected || focused ? 0.86f : 0.60f));
+        accent.setBackground(Ui.roundRect(c,
+                selected ? Ui.alphaWhite(0.95f) : Ui.alphaWhite(0.10f), 3f, 0f, Color.TRANSPARENT));
+        t.setTextColor(Ui.alphaWhite(selected ? 1f : (focused ? 0.96f : 0.80f)));
+        n.setTextColor(Ui.alphaWhite(selected ? 0.88f : (focused ? 0.80f : 0.52f)));
+        r.setTranslationZ(focused ? Ui.px(c, 16) : 0f);
     }
 
     private void repaintGroups() {
         for (int i = 0; i < groupViews.size(); i++) {
             LinearLayout r = (LinearLayout) groupViews.get(i);
-            TextView t = (TextView) r.getChildAt(0);
-            TextView n = (TextView) r.getChildAt(1);
-            paintGroup(r, t, n, i == group, r.hasFocus());
+            View accent = r.getChildAt(0);
+            TextView t = (TextView) r.getChildAt(1);
+            TextView n = (TextView) r.getChildAt(2);
+            paintGroup(r, accent, t, n, i == group, r.hasFocus());
         }
     }
 
@@ -352,14 +376,24 @@ public class SettingsActivity extends Activity {
     }
 
     private View preview(Context c) {
+        // Not a control, and it must not look like one. It used to wear the same rounded
+        // plate and border as the focusable group rows above it, which is a promise the
+        // screen cannot keep: there is nothing to press here. A rule and a label instead.
         LinearLayout box = new LinearLayout(c);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setBackground(Ui.roundRect(c, Ui.alphaWhite(0.075f), 24f, 1f, Ui.alphaWhite(0.20f)));
-        box.setPadding(Ui.px(c, 22), Ui.px(c, 20), Ui.px(c, 22), Ui.px(c, 18));
+        box.setPadding(0, Ui.px(c, 22), 0, 0);
         box.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
+        View rule = new View(c);
+        LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, Ui.px(c, 1)));
+        rlp.bottomMargin = Ui.px(c, 18);
+        rule.setLayoutParams(rlp);
+        rule.setBackground(new android.graphics.drawable.ColorDrawable(Ui.alphaWhite(0.14f)));
+        box.addView(rule);
+
         TextView h = new TextView(c);
-        h.setText("PREVIEW");
+        h.setText("HOW IT WILL LOOK");
         h.setLetterSpacing(0.14f);
         h.setTextColor(Ui.alphaWhite(0.55f));
         h.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 16));
@@ -422,8 +456,9 @@ public class SettingsActivity extends Activity {
         lp.topMargin = Ui.px(c, 10);
         f.setLayoutParams(lp);
         f.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        f.addView(hint(c, "▲▼", "Options, and up to the groups", false));
-        f.addView(hint(c, "◀▶", "Choose a value", true));
+        f.addView(hint(c, "▲▼", "Move", false));
+        f.addView(hint(c, "◀", "Back to the groups", true));
+        f.addView(hint(c, "OK", "Change it", true));
         f.addView(hint(c, "Back", "Home", true));
         return f;
     }
@@ -558,21 +593,19 @@ public class SettingsActivity extends Activity {
             }
         });
         r.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if (o.type == T_ACTION) doAction(c, o);
-                else step(c, o, +1, (TextView) ((Object[]) r.getTag())[1], pills, r);
-            }
+            public void onClick(View v) { activate(c, o, r, pills); }
         });
         r.setOnKeyListener(new View.OnKeyListener() {
             public boolean onKey(View v, int code, KeyEvent e) {
                 if (e.getAction() != KeyEvent.ACTION_DOWN) return false;
-                if (o.type != T_CHOICE) return false;
-                if (code == KeyEvent.KEYCODE_DPAD_RIGHT) {
-                    step(c, o, +1, (TextView) ((Object[]) r.getTag())[1], pills, r); return true;
-                }
+                // Left is BACK, everywhere, always. It used to decrement a value, which left
+                // the way out of a nested list with nowhere to go but up from the first row -
+                // and nobody guesses that.
                 if (code == KeyEvent.KEYCODE_DPAD_LEFT) {
-                    step(c, o, -1, (TextView) ((Object[]) r.getTag())[1], pills, r); return true;
+                    if (!groupViews.isEmpty()) groupViews.get(group).requestFocus();
+                    return true;
                 }
+                if (code == KeyEvent.KEYCODE_DPAD_RIGHT) { activate(c, o, r, pills); return true; }
                 return false;
             }
         });
@@ -643,8 +676,12 @@ public class SettingsActivity extends Activity {
     }
 
     private String describe(Opt o) {
-        return o.title + ", " + currentValue(o) + ". " + o.help
-                + (o.type == T_CHOICE ? " Left and right to change." : "");
+        String how;
+        if (o.type != T_CHOICE) how = " Press OK to open.";
+        else if (o.values.length == 2) how = " Press OK to switch it.";
+        else how = " Press OK to choose from " + o.values.length + " values.";
+        return o.title + ", " + currentValue(o) + ". " + o.help + how
+                + " Left goes back to the groups.";
     }
 
     private void apply(Opt o, int idx) {
@@ -659,10 +696,42 @@ public class SettingsActivity extends Activity {
         else if (o.key.equals("text"))     Prefs.setText(this, idx);
     }
 
+    /**
+     * What OK and right do to an option.
+     *
+     * A two-value option is a switch and both values are already on screen, so it flips in
+     * one press - making a toggle cost three presses to satisfy a navigation rule would be a
+     * bad trade. Anything longer opens the list, which is the same pattern the source picker
+     * uses and the only one that behaves on this television's remote.
+     */
+    private void activate(final Context c, final Opt o, final View row, final LinearLayout pills) {
+        if (o.type == T_ACTION) { doAction(c, o); return; }
+        final TextView value = (TextView) ((Object[]) row.getTag())[1];
+        if (o.values.length == 2) {
+            step(c, o, currentIndex(o) == 0 ? +1 : -1, value, pills, row);
+            return;
+        }
+        final int cur = currentIndex(o);
+        final String[] arr = new String[o.values.length];
+        for (int i = 0; i < o.values.length; i++) {
+            arr[i] = (i == cur ? "\u2022  " : "    ") + o.values[i];
+        }
+        new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(o.title)
+                .setItems(arr, new android.content.DialogInterface.OnClickListener() {
+                    public void onClick(android.content.DialogInterface d, int which) {
+                        step(c, o, which - currentIndex(o), value, pills, row);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
     private void step(Context c, Opt o, int delta, TextView value, LinearLayout pills, View row) {
         int next = currentIndex(o) + delta;
         if (next < 0) next = 0;
         if (next > o.values.length - 1) next = o.values.length - 1;
+        if (next == currentIndex(o) && delta != 0) return;
         apply(o, next);
         value.setText(currentValue(o));
         row.setContentDescription(describe(o));
