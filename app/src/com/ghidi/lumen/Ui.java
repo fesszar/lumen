@@ -65,7 +65,7 @@ public final class Ui {
         g.setShape(GradientDrawable.RECTANGLE);
         g.setColor(alphaWhite(0.06f));
         g.setCornerRadius(px(c, radiusDesign));
-        g.setStroke(Math.max(1, px(c, 2f)), alphaWhite(0.34f), px(c, 12f), px(c, 9f));
+        g.setStroke(Math.max(2, px(c, 3f)), alphaWhite(0.55f), px(c, 16f), px(c, 11f));
         return g;
     }
 

@@ -20,7 +20,6 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextClock;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -767,7 +766,7 @@ public class HomeActivity extends Activity {
         p.setSingleLine(true);
         p.setContentDescription(given.length() > 0
                 ? given + " on " + s.port + ", switch input"
-                : s.port + ", switch input. Hold OK to name it");
+                : s.port + ", switch input. Name it in Settings, What is on Home.");
         p.setTextColor(Ui.alphaWhite(Ui.TEXT_SECONDARY));
         p.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 21));
         p.setPadding(Ui.px(c, 28), Ui.px(c, 14), Ui.px(c, 28), Ui.px(c, 14));

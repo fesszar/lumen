@@ -2,9 +2,7 @@ package com.ghidi.lumen;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
-import android.media.tv.TvContract;
 import android.media.tv.TvInputInfo;
 import android.media.tv.TvInputManager;
 import android.os.Bundle;
@@ -283,41 +281,80 @@ public class SourcesActivity extends Activity {
         return box;
     }
 
+    /**
+     * Naming an input, with a remote that only has a D-pad.
+     *
+     * A dialog with a text field is a trap on a television: once the field has focus the
+     * on-screen keyboard takes the D-pad, so down and right never reach the Save button and
+     * the only way out is Back. Measured on this TV - focus stayed on the field through both.
+     *
+     * So the keyboard's own Done key commits. Back closes the keyboard and then down and
+     * right do reach Save - which is the route that has to work, because Done does NOT fire
+     * on an empty field, and an empty field is exactly how a name gets removed. Both routes
+     * are spelled out in the dialog rather than left to be discovered.
+     */
     private void rename(final Port p) {
         final EditText input = new EditText(this);
         input.setText(Prefs.sourceName(this, p.port));
         input.setHint("Sky box, PlayStation, soundbar...");
         input.setSingleLine(true);
         input.setSelectAllOnFocus(true);
+        input.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
+        input.setContentDescription("Name for " + p.port
+                + ". Type a name and press Done. To remove the name, clear the box, press Back "
+                + "to close the keyboard, then choose Save.");
 
-        new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+        final android.app.AlertDialog d = new android.app.AlertDialog.Builder(
+                this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle("What is plugged into " + p.port + "?")
+                .setMessage("Type a name and press Done.\n\nTo go back to just the port "
+                        + "number: clear the box, press Back to close the keyboard, then Save.")
                 .setView(input)
                 .setPositiveButton("Save", new android.content.DialogInterface.OnClickListener() {
-                    public void onClick(android.content.DialogInterface d, int w) {
-                        Prefs.setSourceName(SourcesActivity.this, p.port, input.getText().toString());
-                        draw(SourcesActivity.this);
-                    }
-                })
-                .setNeutralButton("Clear the name", new android.content.DialogInterface.OnClickListener() {
-                    public void onClick(android.content.DialogInterface d, int w) {
-                        Prefs.setSourceName(SourcesActivity.this, p.port, "");
-                        draw(SourcesActivity.this);
+                    public void onClick(android.content.DialogInterface di, int w) {
+                        commit(p, input.getText().toString());
                     }
                 })
                 .setNegativeButton("Cancel", null)
-                .show();
+                .create();
+
+        input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            public boolean onEditorAction(TextView v, int actionId, android.view.KeyEvent e) {
+                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE
+                        || actionId == android.view.inputmethod.EditorInfo.IME_NULL) {
+                    commit(p, input.getText().toString());
+                    d.dismiss();
+                    return true;
+                }
+                return false;
+            }
+        });
+        // A bare Enter or OK on the field commits too, for remotes whose keyboard sends a key
+        // event rather than an editor action.
+        input.setOnKeyListener(new View.OnKeyListener() {
+            public boolean onKey(View v, int code, android.view.KeyEvent e) {
+                if (e.getAction() != android.view.KeyEvent.ACTION_UP) return false;
+                if (code == android.view.KeyEvent.KEYCODE_ENTER
+                        || code == android.view.KeyEvent.KEYCODE_NUMPAD_ENTER) {
+                    commit(p, input.getText().toString());
+                    d.dismiss();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        d.show();
+        input.requestFocus();
     }
 
-    /** Switching input is still the home screen's job; this screen only names things. */
-    @SuppressWarnings("unused")
-    private void switchTo(Port p) {
-        if (p.inputId == null) return;
-        try {
-            Intent i = new Intent(Intent.ACTION_VIEW,
-                    TvContract.buildChannelUriForPassthroughInput(p.inputId));
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(i);
-        } catch (Throwable ignored) { }
+    private void commit(Port p, String name) {
+        Prefs.setSourceName(this, p.port, name);
+        draw(this);
+        String given = Prefs.sourceName(this, p.port);
+        getWindow().getDecorView().announceForAccessibility(given.length() > 0
+                ? p.port + " is now called " + given
+                : p.port + " name removed");
     }
+
 }

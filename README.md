@@ -110,6 +110,17 @@ Contrast sampled from screenshots taken off the television itself, not from the 
 
 Every focusable stop on Home, Settings and Apps on the shelf carries a label — `uiautomator` reports 0 unlabelled across all three.
 
+### Naming an input
+
+<table>
+<tr>
+<td width="50%"><img src="screenshots/v2/12-sources.png" alt="Sources screen with a card per input"><br><sub><b>Settings › What is on Home › Name your inputs.</b> A card per port. OK opens a text field.</sub></td>
+<td width="50%"><img src="screenshots/v2/10-launching.png" alt="Home screen dimmed with the line Opening Netflix at the bottom"><br><sub><b>Opening an app.</b> The tile presses in, the shelf dims, the line names the app. Captured with the system transition slowed; Lumen's own animation setting was untouched.</sub></td>
+</tr>
+</table>
+
+A dialog with a text field is a trap on a television, and this one took three attempts to get right. Once the field has focus the on-screen keyboard owns the D-pad, so **down and right never reach the Save button** — measured, not assumed. The keyboard's Done key commits instead. But Done does not fire on an *empty* field, and an empty field is exactly how you remove a name, so the other route has to work too: Back closes the keyboard, then down and right reach Save. Both are spelled out in the dialog rather than left to be found.
+
 ### Three bugs worth naming
 
 They cost hours, and all three are the kind that look like they cannot possibly be the problem.
@@ -117,6 +128,8 @@ They cost hours, and all three are the kind that look like they cannot possibly 
 **A key collision took the launcher down on every OK press.** `Prefs` stored the on/off switch for the Carry on row as a boolean under `"recents"`; `Recents` stored its list as a string under the same key in the same preferences file. Reading one as the other threw `ClassCastException` and killed the process before the launch could run.
 
 **One app filled the whole screen.** With app names set to "Focused only", the wrapper function returns the tile itself rather than a column — and the next line overwrote the tile's fixed size with `WRAP_CONTENT`, letting it inflate to its banner's intrinsic size. Latent in v1 too.
+
+**All apps was the odd one out.** Launching from it left no trace in Carry on, gave no feedback, and reported failure through a Toast — the exact thing the home screen had stopped doing. Opening an app is opening an app, wherever you pressed OK.
 
 **The settings groups were unreachable by remote.** They were clickable but never focusable, and the option rows swallow left and right to change values. Nothing could move focus into the list. Up from the first option now goes there.
 
