@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.media.tv.TvContract;
 import android.media.tv.TvInputInfo;
 import android.media.tv.TvInputManager;
@@ -30,6 +31,11 @@ import java.util.Map;
 
 public class HomeActivity extends Activity {
 
+    /** Three, from three different apps. More turns a glance into a decision. */
+    private static final int CARRY_ON_CARDS = 3;
+    private static final int REQ_TV_LISTINGS = 41;
+
+
     private View ground;
     private LinearLayout row;
     private LinearLayout sourcesBox;
@@ -50,6 +56,8 @@ public class HomeActivity extends Activity {
     // it onResume - which runs immediately after build() - wipes the loading line before the
     // background load has had a chance to finish.
     private boolean shelfReady = false;
+    /** Bumped on every refresh so a slow query cannot paint over a newer one. */
+    private int recentsGen = 0;
     private final Handler ui = new Handler(Looper.getMainLooper());
 
     @Override
@@ -75,6 +83,33 @@ public class HomeActivity extends Activity {
                 }
             }, 700);
         }
+
+        askForListings();
+    }
+
+    /**
+     * READ_TV_LISTINGS is a normal runtime permission, so it has to be asked for - once. If
+     * the answer is no, the Carry on row simply never appears; nothing else is affected, and
+     * Settings can ask again by turning the row off and on.
+     */
+    private void askForListings() {
+        if (WatchNext.permitted(this)) return;
+        if (Prefs.listingsAsked(this)) return;
+        Prefs.setListingsAsked(this, true);
+        ui.postDelayed(new Runnable() {
+            public void run() {
+                try {
+                    requestPermissions(
+                            new String[]{"android.permission.READ_TV_LISTINGS"}, REQ_TV_LISTINGS);
+                } catch (Throwable ignored) { }
+            }
+        }, 1400);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] granted) {
+        super.onRequestPermissionsResult(req, perms, granted);
+        if (req == REQ_TV_LISTINGS) refreshRecents();
     }
 
     @Override
@@ -252,7 +287,9 @@ public class HomeActivity extends Activity {
 
         TextView sub = new TextView(c);
         sub.setText("where you left off");
-        sub.setTextColor(Ui.alphaWhite(0.46f));
+        // 0.46 measured 3.70:1 on the home ground - below the 4.5:1 floor. 0.60 is
+        // 5.22:1 and still clearly quieter than the CARRY ON label beside it.
+        sub.setTextColor(Ui.alphaWhite(0.60f));
         sub.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 18));
         LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -276,12 +313,41 @@ public class HomeActivity extends Activity {
     }
 
     /**
-     * Rebuilt on every resume, because the row's whole job is to reflect what just happened.
-     * With nothing launched yet the block is removed rather than left as empty frames.
+     * The Carry on row, rebuilt on every resume.
+     *
+     * The rows come from the television's own watch-next database, one per app, newest app
+     * first. The query touches a content provider, so it runs off the main thread and the
+     * result is dropped if the screen was rebuilt in the meantime. With nothing to carry on -
+     * a new television, or the permission refused - the whole block is removed rather than
+     * left as three empty frames.
      */
     private void refreshRecents() {
         if (recentsRow == null || recentsBlock == null) return;
         final Context c = this;
+        if (!Prefs.showRecents(c) || !WatchNext.permitted(c)) {
+            recentsRow.removeAllViews();
+            recentFocusables.clear();
+            recentsBlock.setVisibility(View.GONE);
+            linkFocus();
+            return;
+        }
+
+        final int gen = ++recentsGen;
+        new Thread(new Runnable() {
+            public void run() {
+                final List<WatchNext.Item> items = WatchNext.latestPerApp(c, CARRY_ON_CARDS);
+                ui.post(new Runnable() {
+                    public void run() {
+                        if (gen != recentsGen) return;          // a rebuild overtook us
+                        if (recentsRow == null || recentsBlock == null) return;
+                        showWatchNext(c, items);
+                    }
+                });
+            }
+        }, "lumen-watchnext").start();
+    }
+
+    private void showWatchNext(Context c, List<WatchNext.Item> items) {
         recentsRow.removeAllViews();
         recentFocusables.clear();
 
@@ -289,75 +355,155 @@ public class HomeActivity extends Activity {
         for (AppEntry a : apps) byPkg.put(a.pkg, a);
 
         int added = 0;
-        for (Recents.Item item : Recents.all(c)) {
-            if (added >= Recents.SHOWN) break;
-            AppEntry app = byPkg.get(item.pkg);
-            if (app == null) continue;                 // uninstalled since; skip silently
-            recentsRow.addView(recentCard(c, app, Recents.when(item.at), added > 0));
+        for (WatchNext.Item it : items) {
+            if (added >= CARRY_ON_CARDS) break;
+            AppEntry app = byPkg.get(it.pkg);
+            // A row whose app is hidden from the shelf, or gone, still resumes by intent -
+            // but with no name and no banner it reads as a mystery, so it is skipped.
+            if (app == null) continue;
+            recentsRow.addView(watchCard(c, it, app, added > 0));
             added++;
+        }
+
+        // With one or two rows to show, the cards keep their third of the row rather than
+        // stretching across it - a single card the width of the shelf reads as a banner.
+        for (int i = added; i < CARRY_ON_CARDS && added > 0; i++) {
+            View spacer = new View(c);
+            LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
+                    0, 1, 1f);
+            slp.leftMargin = Ui.px(c, 20);
+            spacer.setLayoutParams(slp);
+            spacer.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            recentsRow.addView(spacer);
         }
 
         recentsBlock.setVisibility(added == 0 ? View.GONE : View.VISIBLE);
         linkFocus();
     }
 
-    private View recentCard(final Context c, final AppEntry app, String when, boolean spaced) {
+    /**
+     * One card: the poster, what it is, and how far in you were.
+     *
+     * Everything on it comes from the television's own watch-next database - the same rows
+     * Google TV Home reads. OK fires the row's resume intent, which drops you back into the
+     * exact episode at the exact second, rather than merely opening the app.
+     */
+    private View watchCard(final Context c, final WatchNext.Item it, final AppEntry app,
+                           boolean spaced) {
         final LinearLayout card = new LinearLayout(c);
         card.setOrientation(LinearLayout.HORIZONTAL);
         card.setGravity(Gravity.CENTER_VERTICAL);
         card.setFocusable(true);
         card.setClipToOutline(true);
-        card.setContentDescription(app.label + ", opened " + when + ". Open");
-        int pad = Ui.px(c, 20);
-        card.setPadding(pad, pad, Ui.px(c, 26), pad);
+        int pad = Ui.px(c, 16);
+        card.setPadding(pad, pad, Ui.px(c, 24), pad);
+        // Weighted, not a fixed width: the row then spans exactly what the shelf below it
+        // spans, at any text size, and the extra width goes into the episode name rather
+        // than into empty screen on the right.
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                Ui.px(c, 372), ViewGroup.LayoutParams.WRAP_CONTENT);
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
         if (spaced) lp.leftMargin = Ui.px(c, 20);
         card.setLayoutParams(lp);
         card.setBackground(Ui.glass(c, Prefs.effectiveGlassAlpha(c), 22f, Prefs.highContrast(c)));
         card.setElevation(Ui.px(c, 4));
 
-        FrameLayout art = new FrameLayout(c);
-        art.setLayoutParams(new LinearLayout.LayoutParams(Ui.px(c, 116), Ui.px(c, 66)));
+        String appName = app != null ? app.label : Prefs.rememberedLabel(c, it.pkg);
+        card.setContentDescription(it.title
+                + (it.subtitleSpoken().length() > 0 ? ". " + it.subtitleSpoken() : "")
+                + (it.status().length() > 0 ? ". " + it.status() : "")
+                + ". On " + appName + ". Press OK to carry on.");
+
+        // ---- poster
+        final FrameLayout art = new FrameLayout(c);
+        final int artW = 172, artH = Math.round(172 * 9f / 16f);
+        art.setLayoutParams(new LinearLayout.LayoutParams(Ui.px(c, artW), Ui.px(c, artH)));
         art.setClipToOutline(true);
-        art.setBackground(Ui.roundRect(c, app.tint, 11f, 1f, Ui.alphaWhite(0.18f)));
-        if (app.art != null) {
-            android.widget.ImageView iv = new android.widget.ImageView(c);
-            iv.setLayoutParams(new FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            iv.setImageDrawable(app.art);
-            iv.setScaleType(app.hasBanner ? android.widget.ImageView.ScaleType.CENTER_CROP
-                                          : android.widget.ImageView.ScaleType.CENTER_INSIDE);
-            if (!app.hasBanner) { int p2 = Ui.px(c, 12); iv.setPadding(p2, p2, p2, p2); }
-            iv.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            art.addView(iv);
+        int tint = app != null ? app.tint : Color.parseColor("#2A2F39");
+        art.setBackground(Ui.roundRect(c, tint, 11f, 1f, Ui.alphaWhite(0.18f)));
+
+        final android.widget.ImageView poster = new android.widget.ImageView(c);
+        poster.setLayoutParams(new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        poster.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+        poster.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        art.addView(poster);
+
+        // Until the poster arrives - or if art is switched off - the app's own banner stands in,
+        // so the card is never an empty grey box.
+        if (app != null && app.art != null) {
+            poster.setImageDrawable(app.art);
+            poster.setScaleType(app.hasBanner ? android.widget.ImageView.ScaleType.CENTER_CROP
+                                              : android.widget.ImageView.ScaleType.CENTER_INSIDE);
+        }
+        if (it.artUri.length() > 0 && Prefs.posterArt(c)) {
+            ArtCache.load(c, it.artUri, Ui.px(c, artW), new ArtCache.Ready() {
+                public void onArt(android.graphics.Bitmap b) {
+                    poster.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                    poster.setImageBitmap(b);
+                }
+            });
+        }
+
+        // progress along the bottom of the poster
+        if (it.progress() > 0.01f) {
+            View track = new View(c);
+            FrameLayout.LayoutParams tlp = new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, Ui.px(c, 5));
+            tlp.gravity = Gravity.BOTTOM;
+            track.setLayoutParams(tlp);
+            track.setBackground(new android.graphics.drawable.ColorDrawable(Color.argb(120, 0, 0, 0)));
+            art.addView(track);
+
+            View bar = new View(c);
+            FrameLayout.LayoutParams blp = new FrameLayout.LayoutParams(
+                    Math.max(Ui.px(c, 4), Math.round(Ui.px(c, artW) * it.progress())), Ui.px(c, 5));
+            blp.gravity = Gravity.BOTTOM;
+            bar.setLayoutParams(blp);
+            bar.setBackground(new android.graphics.drawable.ColorDrawable(Color.WHITE));
+            art.addView(bar);
         }
         card.addView(art);
 
+        // ---- text
         LinearLayout text = new LinearLayout(c);
         text.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0,
+        LinearLayout.LayoutParams tlp2 = new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        tlp.leftMargin = Ui.px(c, 20);
-        text.setLayoutParams(tlp);
+        tlp2.leftMargin = Ui.px(c, 18);
+        text.setLayoutParams(tlp2);
 
         TextView name = new TextView(c);
-        name.setText(app.label);
+        name.setText(it.title);
         name.setSingleLine(true);
         name.setEllipsize(android.text.TextUtils.TruncateAt.END);
         name.setTextColor(Ui.alphaWhite(Ui.TEXT_PRIMARY));
-        name.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 25));
+        name.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 24));
         name.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         text.addView(name);
 
-        final TextView ago = new TextView(c);
-        ago.setText(when);
-        ago.setSingleLine(true);
-        ago.setTextColor(Ui.alphaWhite(Ui.TEXT_TERTIARY));
-        ago.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 19));
-        ago.setPadding(0, Ui.px(c, 5), 0, 0);
-        ago.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        text.addView(ago);
+        String sub = it.subtitle();
+        if (sub.length() > 0) {
+            TextView s2 = new TextView(c);
+            s2.setText(sub);
+            s2.setSingleLine(true);
+            s2.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            s2.setTextColor(Ui.alphaWhite(0.84f));
+            s2.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 19));
+            s2.setPadding(0, Ui.px(c, 4), 0, 0);
+            s2.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            text.addView(s2);
+        }
+
+        final TextView foot = new TextView(c);
+        String status = it.status();
+        foot.setText(status.length() > 0 ? status + "  ·  " + appName : appName);
+        foot.setSingleLine(true);
+        foot.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        foot.setTextColor(Ui.alphaWhite(Ui.TEXT_TERTIARY));
+        foot.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 18));
+        foot.setPadding(0, Ui.px(c, 6), 0, 0);
+        foot.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        text.addView(foot);
         card.addView(text);
 
         card.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -365,23 +511,77 @@ public class HomeActivity extends Activity {
                 card.setForeground(has
                         ? Ui.ring(c, 22f, Prefs.highContrast(c) ? 6f : 4f, Ui.alphaWhite(0.95f))
                         : Ui.ring(c, 22f, 0f, Color.TRANSPARENT));
-                ago.setTextColor(Ui.alphaWhite(has ? 0.90f : Ui.TEXT_TERTIARY));
+                foot.setTextColor(Ui.alphaWhite(has ? 0.90f : Ui.TEXT_TERTIARY));
                 card.setTranslationZ(has ? Ui.px(c, 30) : 0f);
                 int ms = Prefs.motionMs(c);
                 card.animate().cancel();
-                if (ms == 0) { card.setScaleX(has ? 1.035f : 1f); card.setScaleY(has ? 1.035f : 1f); }
-                else card.animate().scaleX(has ? 1.035f : 1f).scaleY(has ? 1.035f : 1f)
+                if (ms == 0) { card.setScaleX(has ? 1.03f : 1f); card.setScaleY(has ? 1.03f : 1f); }
+                else card.animate().scaleX(has ? 1.03f : 1f).scaleY(has ? 1.03f : 1f)
                         .setDuration(ms).setInterpolator(Ui.EASE).start();
-                if (has) setGround(app);
+                if (has && app != null) setGround(app);
             }
         });
         card.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { launch(app, null); }
+            public void onClick(View v) { resume(it, app); }
         });
 
         card.setId(View.generateViewId());
         recentFocusables.add(card);
         return card;
+    }
+
+    /**
+     * Back into the exact episode. The intent comes from the row itself, so it is the app's
+     * own resume link - Netflix hands over an intent: URI, the others https or a custom
+     * scheme. If it will not start, fall back to simply opening the app rather than doing
+     * nothing.
+     */
+    private void resume(WatchNext.Item it, AppEntry app) {
+        if (launching) return;
+        Intent go = null;
+        if (it.intentUri != null && it.intentUri.length() > 0) {
+            try {
+                go = Intent.parseUri(it.intentUri, Intent.URI_INTENT_SCHEME);
+            } catch (Throwable t) {
+                try { go = new Intent(Intent.ACTION_VIEW, Uri.parse(it.intentUri)); }
+                catch (Throwable ignored) { }
+            }
+        }
+        if (go != null) {
+            go.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (go.getPackage() == null && go.getComponent() == null) go.setPackage(it.pkg);
+        }
+
+        launching = true;
+        if (shelfPanel != null) {
+            int ms = Prefs.motionMs(this);
+            shelfPanel.animate().cancel();
+            if (ms == 0) shelfPanel.setAlpha(0.55f);
+            else shelfPanel.animate().alpha(0.55f).setDuration(ms).setInterpolator(Ui.EASE).start();
+        }
+        setStatus("Opening " + it.title);
+        announce("Opening " + it.title);
+        Recents.record(this, it.pkg);
+
+        final Intent first = go;
+        final AppEntry fallbackApp = app;
+        final String pkg = it.pkg;
+        ui.postDelayed(new Runnable() {
+            public void run() {
+                if (first != null) {
+                    try { startActivity(first); return; } catch (Throwable ignored) { }
+                }
+                Intent plain = fallbackApp != null ? fallbackApp.launchIntent(HomeActivity.this) : null;
+                if (plain == null) {
+                    plain = getPackageManager().getLeanbackLaunchIntentForPackage(pkg);
+                    if (plain == null) plain = getPackageManager().getLaunchIntentForPackage(pkg);
+                    if (plain != null) plain.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                }
+                if (plain != null) { try { startActivity(plain); return; } catch (Throwable ignored) { } }
+                launching = false;
+                setStatus("Cannot open that");
+            }
+        }, 90);
     }
 
     // ------------------------------------------------------------------ shelf

@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.ghidi.lumen"
-    android:versionCode="2"
-    android:versionName="2.0">
+    android:versionCode="3"
+    android:versionName="2.1">
 
     <uses-sdk android:minSdkVersion="30" android:targetSdkVersion="30" />
+
+    <!-- Reads the television's own watch-next rows: what you were part-way through, and the
+         intent that resumes it. A normal runtime permission, asked for once on first run. -->
+    <uses-permission android:name="android.permission.READ_TV_LISTINGS" />
+    <!-- Poster art on the Carry on cards, and nothing else. Turning "Poster art" off in
+         Settings stops every request Lumen would otherwise make. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />

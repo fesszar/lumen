@@ -42,6 +42,17 @@ public final class Prefs {
     /** The Carry on row above the shelf. */
     public static boolean showRecents(Context c) { return p(c).getBoolean("recents", true); }
 
+    /**
+     * Poster art on the Carry on cards. Off means Lumen makes no network requests at all -
+     * the only ones it ever makes are for these images.
+     */
+    public static boolean posterArt(Context c) { return p(c).getBoolean("art", true); }
+    public static void setPosterArt(Context c, boolean v) { p(c).edit().putBoolean("art", v).apply(); }
+
+    /** Whether the one-time READ_TV_LISTINGS request has already been put to the person. */
+    public static boolean listingsAsked(Context c) { return p(c).getBoolean("askedtv", false); }
+    public static void setListingsAsked(Context c, boolean v) { p(c).edit().putBoolean("askedtv", v).apply(); }
+
     /** The first-boot notice is shown once, then reachable from Settings. */
     public static boolean firstBootDone(Context c) { return p(c).getBoolean("firstboot", false); }
     public static void setFirstBootDone(Context c, boolean v) { p(c).edit().putBoolean("firstboot", v).apply(); }

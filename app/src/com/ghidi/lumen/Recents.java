@@ -8,16 +8,12 @@ import java.util.Calendar;
 import java.util.List;
 
 /**
- * The Carry on row.
+ * Which apps were opened from Lumen, and when.
  *
- * This is deliberately NOT a resume list. Per-title resume state lives in TvProvider's
- * watch_next table, which is gated behind com.android.providers.tv.permission.ACCESS_ALL_EPG_DATA.
- * That permission's protectionLevel on this television is signature|privileged, so a sideloaded
- * launcher can never hold it and would read an empty table forever. MediaSession is no rescue
- * either: the sessions that survive a launch carry metadata: null.
- *
- * What the launcher legitimately knows is which apps it launched and when, because it did the
- * launching. That is all this records.
+ * This no longer feeds the Carry on row - that reads real per-title resume state from
+ * TvProvider's watch_next table (see {@link WatchNext}). What is kept here is the launcher's
+ * own record of what it launched: cheap, private, and the tiebreak for anything that needs
+ * "most recently used" without asking the system.
  */
 public final class Recents {
 

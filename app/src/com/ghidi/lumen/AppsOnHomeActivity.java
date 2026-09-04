@@ -202,7 +202,7 @@ public class AppsOnHomeActivity extends Activity {
 
         TextView b = new TextView(c);
         b.setText(sub);
-        b.setTextColor(Ui.alphaWhite(0.50f));
+        b.setTextColor(Ui.alphaWhite(0.60f));   // 0.50 measured under the 4.5:1 floor
         b.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 19));
         LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);

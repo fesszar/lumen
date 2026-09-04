@@ -60,8 +60,14 @@ public class SettingsActivity extends Activity {
                 "Choose which apps appear, and in what order. Everything else stays in All apps.",
                 new String[]{ "Choose" }));
         home.add(new Opt(T_CHOICE, "recents", "Carry on",
-                "The apps you opened most recently, above the shelf. This is not a resume list - "
-                + "Android reserves per-episode resume data for system apps.",
+                "What you were part-way through, above the shelf - one card each from your three "
+                + "most recent apps, showing the title, the episode and how far in you got. "
+                + "OK goes back to that exact point.",
+                new String[]{ "On", "Off" }));
+        home.add(new Opt(T_CHOICE, "art", "Poster art",
+                "Artwork on the Carry on cards, downloaded from the app that put the row there. "
+                + "This is the only time Lumen uses the network. Off means it never does, and "
+                + "the cards show the app's own banner instead.",
                 new String[]{ "On", "Off" }));
         home.add(new Opt(T_CHOICE, "sources", "Sources strip",
                 "HDMI ports and the tuner, under the shelf.",
@@ -652,6 +658,7 @@ public class SettingsActivity extends Activity {
 
     private int currentIndex(Opt o) {
         if (o.key.equals("recents"))  return Prefs.showRecents(this) ? 0 : 1;
+        if (o.key.equals("art"))      return Prefs.posterArt(this) ? 0 : 1;
         if (o.key.equals("sources"))  return Prefs.sourcesVisible(this) ? 0 : 1;
         if (o.key.equals("names"))    return Prefs.alwaysShowNames(this) ? 0 : 1;
         if (o.key.equals("tile"))     return Prefs.tileIndex(this);
@@ -686,6 +693,8 @@ public class SettingsActivity extends Activity {
 
     private void apply(Opt o, int idx) {
         if (o.key.equals("recents"))       Prefs.setRecents(this, idx == 0);
+        else if (o.key.equals("art"))      { Prefs.setPosterArt(this, idx == 0);
+                                             if (idx != 0) ArtCache.clear(this); }
         else if (o.key.equals("sources"))  Prefs.setSources(this, idx == 0);
         else if (o.key.equals("names"))    Prefs.setNames(this, idx == 0);
         else if (o.key.equals("tile"))     Prefs.setTile(this, idx);

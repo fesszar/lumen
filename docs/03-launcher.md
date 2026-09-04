@@ -97,19 +97,53 @@ ADB survives reboots on most sets, so you keep a way in even if the screen is bl
 
 ## Settings
 
-Nine of them. Everything else belongs in the TV's own settings, which the last row links to.
+Sixteen options in four named groups. Left always goes back to the group list; OK switches a two-value option in one press and opens a marked list for anything longer. Everything that belongs to the television rather than the launcher is behind the last row.
+
+**What is on Home**
 
 | Setting | Options | What it does |
 |---|---|---|
-| **Apps on Home** | per-app | Hide an app from the shelf. It stays in All apps. |
-| **Background** | Adaptive, Aurora, Ember, Slate, Neutral | Adaptive tints the background from whatever's focused |
-| **Glass strength** | 8 / 15 / 22 / 30% | Panel opacity |
-| **Tile size** | Small 240 / Medium 288 / Large 336 px | Sized for your viewing distance |
-| **Sources strip** | Visible / Hidden | The HDMI row |
-| **App names** | Always / On focus | Names under every tile, or only the focused one |
-| **Reduce motion** | On / Off | Sets animation duration to zero. Also obeys the TV's own animation scale. |
-| **High contrast** | On / Off | Near-black panels, thicker focus ring |
-| **Open the TV settings** | — | Picture, sound, network |
+| **Apps on the shelf** | per-app | Choose which apps appear and in what order. Hidden ones stay in All apps. |
+| **Carry on** | On / Off | The three resume cards above the shelf. |
+| **Poster art** | On / Off | Artwork on those cards. Off means Lumen makes no network request at all. |
+| **Sources strip** | Visible / Hidden | The HDMI row. |
+| **Name your inputs** | — | Call HDMI 2 "PlayStation". Pick from a list, or type. |
+| **App names** | Always / Focused only | Names under every tile, or only the focused one. |
+
+**How it looks**
+
+| Setting | Options | What it does |
+|---|---|---|
+| **Tile size** | Small 240 / Medium 288 / Large 336 px | Sized for your viewing distance. |
+| **Glass strength** | 8 / 15 / 22 / 30% | Panel opacity. |
+| **Background** | Adaptive, Aurora, Ember, Slate, Neutral | Adaptive tints the ground from whatever is focused. |
+
+**Easier to see and use**
+
+| Setting | Options | What it does |
+|---|---|---|
+| **High contrast** | On / Off | Near-black panels, thicker focus ring. |
+| **Reduce motion** | On / Off | Animation duration to zero. Also obeys the TV's own animation scale. |
+| **Text size** | Normal / Large / Larger | Names, the Carry on row and this screen. |
+
+**This launcher**
+
+| Setting | Options | What it does |
+|---|---|---|
+| **What changed on this TV** | — | The first-boot notice again, for whoever did not do this. |
+| **Save your settings** | — | Writes them out, so a reinstall does not start from scratch. |
+| **Load saved settings** | — | Reads them back. |
+| **Open the TV settings** | — | Picture, sound, network. |
+
+---
+
+## The one permission, and the one request
+
+Lumen asks for two things in the manifest and nothing else.
+
+`READ_TV_LISTINGS` is a runtime permission — you are asked once, on first run, and the system dialog says exactly what it is for. It lets the launcher read the television's own watch-next table: what you were watching in each app, which episode, how far in, and the link that resumes it. Say no and the Carry on row simply never appears; nothing else changes. It is not the privileged `ACCESS_ALL_EPG_DATA`, which Lumen does not hold and does not need.
+
+`INTERNET` is used for one thing: downloading the poster on a Carry on card, from the URL the streaming app itself wrote into the row. Nothing is uploaded and nothing is reported. **Settings › What is on Home › Poster art › Off** stops it entirely, and the cards keep their titles, episodes and progress, because all of that already lives on the device.
 
 ---
 

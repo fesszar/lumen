@@ -34,14 +34,14 @@ Two things that work together, and either one is useful on its own.
 
 **A guide** to switching off the advertising, telemetry and factory clutter on an Android TV, using nothing but a laptop and a USB cable's worth of patience. Nothing gets uninstalled — every change is one command away from being undone.
 
-**A launcher** to replace the home screen once the ads underneath it are gone. About 900 lines of plain Java, no frameworks, no analytics, no network access of any kind.
+**A launcher** to replace the home screen once the ads underneath it are gone. About 1,100 lines of plain Java, no frameworks, no analytics, and exactly one thing it fetches from the internet — poster art on the Carry on cards, which is a switch in Settings.
 
 
 ---
 
 ## Version 2
 
-The first version was a shelf of apps and nothing else. That was the point, and most of it survives. But a round of research and a set of user flows turned up eight things worth changing, and one thing that turned out to be impossible.
+The first version was a shelf of apps and nothing else. That was the point, and most of it survives. But a round of research and a set of user flows turned up eight things worth changing — including the one I spent a page of this README explaining was impossible, and then built.
 
 <table>
 <tr>
@@ -50,11 +50,20 @@ The first version was a shelf of apps and nothing else. That was the point, and 
 </tr>
 </table>
 
-### The thing that could not be built
+### The thing I said could not be built
 
 The headline idea was a resume card: *Slow Horses, Season 4 Episode 2, 31 minutes left.* Resume state is the single most-cited complaint about television home screens, so it looked like the obvious win.
 
-It cannot be done by a sideloaded launcher, and the television says so plainly:
+I shipped v2 with a paragraph here explaining why it was impossible. That paragraph was wrong, and it is worth keeping the wrong reasoning visible, because the mistake is an easy one to make twice.
+
+**What I did.** I queried the table from the shell and got nothing:
+
+```
+$ adb shell content query --uri content://android.media.tv/watch_next_program
+No result found.
+```
+
+Then I looked up the permission that guards the whole of TvProvider's EPG data and found it was out of reach:
 
 ```
 $ adb shell pm list permissions -f | grep -A4 ACCESS_ALL_EPG_DATA
@@ -63,17 +72,50 @@ $ adb shell pm list permissions -f | grep -A4 ACCESS_ALL_EPG_DATA
   protectionLevel:signature|privileged
 ```
 
-Per-title resume lives in TvProvider's `watch_next_program` table. Without `ACCESS_ALL_EPG_DATA` a caller sees only the rows it wrote itself, and that permission is `signature|privileged` — a system app, or nothing. Lumen installs to `/data/app` with ordinary flags, so it would read an empty table for ever. Google TV Home can do it because it is privileged. We cannot.
+Empty table, privileged permission, case closed. I wrote it up and moved on.
 
-MediaSession is not a way round it either. Netflix's session survives being closed, but with `metadata: null` and `state=STOPPED` — no title, no position.
+**Both halves of that are wrong.**
 
-So the card became a **Carry on row**: the three apps you opened most recently, and when. That is something the launcher honestly knows, because it did the launching. Not as good as the idea. True, though, which the idea was not.
+`adb shell` runs as the `shell` package. TvProvider scopes rows by their owner, `shell` has never written a watch-next row in its life, and it cannot be granted the permission that would let it see anybody else's. So an empty result from the shell is exactly what you get whether the table holds nothing or eighty-four rows. *It is not evidence about what an app can see.* It is a null measurement I read as a negative one.
+
+And `ACCESS_ALL_EPG_DATA` is not what reading needs. `READ_TV_LISTINGS` is enough, and its protection level is `dangerous` — an ordinary runtime permission, the same class as the microphone. You ask for it, the person says yes, and you can read the table. Lumen holds it and does not hold the privileged one:
+
+```
+READ_TV_LISTINGS granted   = true
+ACCESS_ALL_EPG_DATA granted = false
+rows visible               = 84, across 7 apps
+```
+
+**What is actually in there.** Every streaming app on the television writes to it, because writing to it is how they get their own tiles onto Google TV's home screen. Measured on this TV, one row per app, most recent first:
+
+| App | Title | Where you were |
+|---|---|---|
+| Crunchyroll | Mushoku Tensei S2 E21 | 12 of 23 min |
+| SkyShowtime | Berlin Station S1 E3 | 39 of 54 min |
+| HBO Max | The Mentalist S4 E22 | 7 of 41 min |
+| Prime Video | Sterling Point S1 E1 | queued |
+| Apple TV | Silo S3 E1 | next episode |
+| Disney+ | Criminal Minds S1 E17 | next episode |
+| Netflix | Friends S7 E6 | 20 of 21 min |
+
+Title, episode title, season and episode number, poster art, duration, position, and an `intent_uri` that resumes the exact thing at the exact second. Netflix's is an `intent:` URI straight to `com.netflix.ninja/.MainActivity`; the others are https deep links.
+
+So the Carry on row is what it was supposed to be all along: **the three apps you touched most recently, one card each, showing what you were part-way through.** OK on a card does not open the app — it resumes the episode.
+
+<table>
+<tr>
+<td width="50%"><img src="screenshots/v2/02-carry-on.png" alt="Three Carry on cards with poster art: Friends on Netflix, Family Guy on Disney Plus, The Mentalist on HBO Max"><br><sub><b>Poster art on.</b> Three apps, three cards, artwork fetched from the URL each app wrote into its own row.</sub></td>
+<td width="50%"><img src="screenshots/v2/15-poster-art-off.png" alt="The same three cards with each app's banner in place of the poster"><br><sub><b>Poster art off.</b> The app's own banner stands in, and Lumen makes no network request at all. Titles, episodes and progress are unchanged, because none of that came from the internet.</sub></td>
+</tr>
+</table>
+
+The lesson is not about Android. It is that "the command returned nothing" and "there is nothing there" are different sentences, and I let a tool's own lack of permission stand in for a fact about the world. The person I was building this for did not accept it, said their old launcher showed titles, and told me to look harder. They were right.
 
 ### What else changed
 
 | | |
 |---|---|
-| **Carry on row** | The three most recently opened apps, with when. Replaces the resume card above. |
+| **Carry on row** | Three cards from three different apps: what you were watching, which episode, how far in, and a poster. OK resumes it. Reads the television's own watch-next table. |
 | **A hint line that stays** | Up, down and right, named, along the bottom. Not a dismissible first-run tour — the person who needs it is rarely the person who set this up. |
 | **The big caption is gone** | The focused app's name no longer repeats in 44px under the shelf. It said what the focus ring already said, and screen readers read it twice. |
 | **Ports named by device** | "HDMI 2 · PlayStation 5". The port number stays, so you still know which socket you are switching to. Named from Settings › What is on Home › Name your inputs. |
@@ -99,14 +141,20 @@ Contrast sampled from screenshots taken off the television itself, not from the 
 
 | Element | Ratio |
 |---|---|
+| Carry on — title | 11.97:1 |
+| Carry on — season and episode | 9.44:1 |
+| Carry on — how far in, and the app | 8.59:1 |
+| "where you left off" subheading | 5.16:1 |
 | App name under a tile | 9.35:1 |
-| Carry on — app name | 11.61:1 |
-| Carry on — timestamp | 8.30:1 |
-| Hint line | 6.97:1 |
+| Hint line | 9.60:1 |
 | Settings row title and help | 6.49:1 |
 | Settings row value | 7.36:1 |
 | Clock, Settings pill | 9.87:1, 9.94:1 |
 | App name, high contrast on | 18.72:1 |
+
+**Worst measured anywhere: 4.86:1**, against a floor of 4.5:1.
+
+Two elements failed on the way here and were fixed rather than reworded: the "where you left off" subheading measured **3.70:1** and its twin on Apps on the shelf **4.14:1**, both from a resting alpha of 0.46–0.50 that looked fine on a laptop and disappeared on a panel. Raised to 0.60. They had been in the build since v2 shipped, and only turned up because the Carry on rewrite meant re-measuring the row around them — which is an argument for measuring every screen every time, not the ones you changed.
 
 Every focusable stop on Home, Settings and Apps on the shelf carries a label — `uiautomator` reports 0 unlabelled across all three.
 
@@ -114,7 +162,7 @@ Every focusable stop on Home, Settings and Apps on the shelf carries a label —
 
 <table>
 <tr>
-<td width="50%"><img src="screenshots/v2/12-sources.png" alt="Sources screen with a card per input"><br><sub><b>Settings › What is on Home › Name your inputs.</b> A card per port. OK opens a text field.</sub></td>
+<td width="50%"><img src="screenshots/v2/12-sources.png" alt="Sources screen with a card per input"><br><sub><b>Settings › What is on Home › Name your inputs.</b> A card per port. OK opens a list.</sub></td>
 <td width="50%"><img src="screenshots/v2/10-launching.png" alt="Home screen dimmed with the line Opening Netflix at the bottom"><br><sub><b>Opening an app.</b> The tile presses in, the shelf dims, the line names the app. Captured with the system transition slowed; Lumen's own animation setting was untouched.</sub></td>
 </tr>
 </table>
@@ -217,8 +265,8 @@ The APK is **debug-signed**. That is normal for something you sideload and build
 
 Stated plainly, because a list of features tells you less than a list of limits.
 
-- **No content rows, ever.** No continue-watching, no recommendations, no "top picks". Not a missing feature — the whole point.
-- **No network access.** The app requests no internet permission. It cannot phone home because it cannot reach anything.
+- **No recommendations, ever.** No "top picks", no trending, no sponsored tile, nothing chosen for you by anyone. The Carry on row is the one exception to an otherwise empty screen, and it is not a recommendation: every card is something *you* started watching, and there are exactly three. Nobody paid for a slot in it, and nobody can.
+- **No network access, except poster art.** Lumen holds `INTERNET` for exactly one purpose: fetching the artwork on the Carry on cards, from the URL the streaming app itself put in the watch-next row. Nothing is sent — no analytics, no identifiers, no phoning home. Settings › What is on Home › **Poster art › Off** stops every request at the source, and the cards fall back to each app's own banner with the title, episode and progress intact, since all of that is already on the device.
 - **No live blur.** Android's blur API arrived in Android 12. On Android 11 the frosted glass is four flat layers that cost nothing per frame. [How and why](docs/04-design.md#glass-without-a-blur-api).
 - **No search.** Use the app you want to search in.
 - **It will not fix a slow TV on its own.** Removing the launcher's ad machinery helps. A television with 2 GB of RAM still has 2 GB of RAM.
