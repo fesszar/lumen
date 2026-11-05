@@ -30,6 +30,12 @@ import java.util.concurrent.Executors;
 public final class ArtCache {
 
     private static final int MEM_MAX = 12;
+    /**
+     * Backdrops are decoded at panel width, so each one is a few megabytes against this
+     * television's 2 GB. Two: the one on screen and the one you are about to move onto.
+     * They get their own map so a backdrop never evicts the twelve small posters.
+     */
+    private static final int BACK_MAX = 2;
     private static final int DISK_MAX_FILES = 40;
     private static final int TIMEOUT_MS = 8000;
 
@@ -41,31 +47,55 @@ public final class ArtCache {
                 }
             };
 
+    private static final Map<String, Bitmap> BACK =
+            new LinkedHashMap<String, Bitmap>(4, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Bitmap> e) {
+                    return size() > BACK_MAX;
+                }
+            };
+
     private static final ExecutorService POOL = Executors.newFixedThreadPool(2);
     private static final Handler UI = new Handler(Looper.getMainLooper());
 
     public interface Ready { void onArt(Bitmap b); }
 
-    public static void load(final Context c, final String url, final int reqW, final Ready cb) {
-        if (url == null || url.length() == 0 || !Prefs.posterArt(c)) return;
-        final String key = key(url);
+    /** A poster at card size. */
+    public static void load(Context c, String url, int reqW, Ready cb) {
+        fetch(c, url, reqW, cb, MEM, "c");
+    }
 
-        synchronized (MEM) {
-            Bitmap hit = MEM.get(key);
-            if (hit != null) { cb.onArt(hit); return; }
+    /**
+     * The same picture at panel width, for the backdrop behind everything. Same file on
+     * disk, decoded larger and held in its own small map.
+     */
+    public static void loadBackdrop(Context c, String url, int reqW, Ready cb) {
+        fetch(c, url, reqW, cb, BACK, "b");
+    }
+
+    private static void fetch(final Context c, final String url, final int reqW,
+                              final Ready cb, final Map<String, Bitmap> cache,
+                              final String scope) {
+        if (url == null || url.length() == 0 || !Prefs.posterArt(c)) return;
+        final String file = key(url);
+        final String ck = scope + reqW + ":" + file;
+
+        synchronized (cache) {
+            Bitmap hit = cache.get(ck);
+            if (hit != null && !hit.isRecycled()) { cb.onArt(hit); return; }
         }
 
         POOL.execute(new Runnable() {
             public void run() {
                 Bitmap b = null;
                 try {
-                    File f = new File(dir(c), key);
+                    File f = new File(dir(c), file);
                     if (!f.exists() || f.length() == 0) download(url, f);
                     if (f.exists() && f.length() > 0) b = decode(f, reqW);
                 } catch (Throwable ignored) { }
                 if (b == null) return;
                 final Bitmap out = b;
-                synchronized (MEM) { MEM.put(key, out); }
+                synchronized (cache) { cache.put(ck, out); }
                 UI.post(new Runnable() { public void run() { cb.onArt(out); } });
             }
         });
@@ -151,6 +181,7 @@ public final class ArtCache {
     /** Called when the setting is turned off, so nothing lingers. */
     public static void clear(Context c) {
         synchronized (MEM) { MEM.clear(); }
+        synchronized (BACK) { BACK.clear(); }
         File d = new File(c.getCacheDir(), "art");
         File[] fs = d.listFiles();
         if (fs != null) for (File f : fs) f.delete();
