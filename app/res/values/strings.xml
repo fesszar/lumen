@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="remote_service_desc">Lets the app buttons on your remote open whatever you choose. Lumen only watches for the keys you set up yourself. It ignores every other key, it doesn\'t read what is on screen, and it doesn\'t send anything anywhere.</string>
+    <string name="remote_service_summary">Make the Netflix, Prime and other app buttons work again</string>
+</resources>

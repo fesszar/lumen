@@ -110,7 +110,7 @@ public class SourcesActivity extends Activity {
         root.addView(content);
 
         TextView kicker = new TextView(c);
-        kicker.setText("SOURCES");
+        kicker.setText("INPUTS");
         kicker.setLetterSpacing(0.16f);
         kicker.setTextColor(Ui.alphaWhite(0.55f));
         kicker.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 21));
@@ -147,8 +147,8 @@ public class SourcesActivity extends Activity {
         foot.setOrientation(LinearLayout.HORIZONTAL);
         foot.setGravity(Gravity.CENTER_VERTICAL);
         foot.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        foot.addView(hint(c, "◀▶", "Choose an input", false));
-        foot.addView(hint(c, "OK", "Choose what is plugged in", true));
+        foot.addView(hint(c, "◀▶", "Move between inputs", false));
+        foot.addView(hint(c, "OK", "Say what’s plugged in", true));
         foot.addView(hint(c, "Back", "Home", true));
         content.addView(foot);
 
@@ -203,15 +203,15 @@ public class SourcesActivity extends Activity {
     private void updateHead() {
         if (ports.isEmpty()) {
             headline.setText("No inputs found");
-            sub.setText("This television did not report any HDMI ports or a tuner.");
+            sub.setText("This television didn’t report any HDMI ports or an aerial, so there’s nothing to name.");
             return;
         }
         Port p = ports.get(Math.min(cursor, ports.size() - 1));
         String given = Prefs.sourceName(this, p.port);
         headline.setText(given.length() > 0 ? given : p.port);
         sub.setText(given.length() > 0
-                ? p.port + "  ·  press OK to change it"
-                : "Press OK to say what is plugged into " + p.port);
+                ? p.port + "  ·  OK to change it"
+                : "OK to say what’s plugged into " + p.port);
     }
 
     private View card(final Context c, final Port p, final int index) {
@@ -249,7 +249,7 @@ public class SourcesActivity extends Activity {
         box.addView(name);
 
         TextView port = new TextView(c);
-        port.setText(given.length() > 0 ? p.port : "Not named yet");
+        port.setText(given.length() > 0 ? p.port : "Not named");
         port.setTextColor(Ui.alphaWhite(0.74f));
         port.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 20));
         port.setPadding(0, Ui.px(c, 6), 0, 0);
@@ -337,7 +337,7 @@ public class SourcesActivity extends Activity {
     private void typeName(final Port p) {
         final EditText input = new EditText(this);
         input.setText(Prefs.sourceName(this, p.port));
-        input.setHint("What is plugged in?");
+        input.setHint("What’s plugged in?");
         input.setSingleLine(true);
         input.setSelectAllOnFocus(true);
         input.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
@@ -346,7 +346,7 @@ public class SourcesActivity extends Activity {
         final android.app.AlertDialog d = new android.app.AlertDialog.Builder(
                 this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle("Name for " + p.port)
-                .setMessage("Type a name and press Done on the keyboard.")
+                .setMessage("Type a name, then press Done on the keyboard.")
                 .setView(input)
                 .setPositiveButton("Save", new android.content.DialogInterface.OnClickListener() {
                     public void onClick(android.content.DialogInterface di, int w) {
@@ -388,8 +388,8 @@ public class SourcesActivity extends Activity {
         draw(this);
         String given = Prefs.sourceName(this, p.port);
         getWindow().getDecorView().announceForAccessibility(given.length() > 0
-                ? p.port + " is now called " + given
-                : p.port + " name removed");
+                ? p.port + " is called " + given + " now"
+                : p.port + " isn’t named any more");
     }
 
 }

@@ -74,7 +74,7 @@ public class FirstBootActivity extends Activity {
         card.addView(kicker);
 
         TextView title = new TextView(c);
-        title.setText("This TV now opens straight to your apps.");
+        title.setText("This TV opens straight to your apps now.");
         title.setTextColor(Color.WHITE);
         title.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 50));
         title.setLineSpacing(Ui.px(c, 6), 1f);
@@ -86,9 +86,9 @@ public class FirstBootActivity extends Activity {
         card.addView(title);
 
         TextView body = new TextView(c);
-        body.setText("Someone in your house replaced the old home screen with this one. "
-                + "Nothing was deleted — every app you had is still installed, and the rows "
-                + "of suggested films are simply not shown any more.");
+        body.setText("Someone in your house swapped the old home screen for this one. "
+                + "Nothing was deleted. Every app you had is still installed. The rows of "
+                + "films you never asked for aren't shown any more.");
         body.setTextColor(Ui.alphaWhite(0.92f));
         body.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 25));
         body.setLineSpacing(Ui.px(c, 10), 1f);
@@ -105,11 +105,11 @@ public class FirstBootActivity extends Activity {
         thlp.topMargin = Ui.px(c, 34);
         three.setLayoutParams(thlp);
         three.addView(mini(c, "Where your apps went",
-                "The ones you use are on the shelf. The rest are behind All apps, at the "
-                + "right-hand end.", false));
+                "The ones you watch are on the shelf. Everything else is behind All apps, at "
+                + "the right-hand end of it.", false));
         three.addView(mini(c, "Where HDMI went",
-                "Press down from the shelf. Your ports are listed there, and you can name "
-                + "them after what is plugged in.", true));
+                "Press down from the shelf and your ports are listed there. You can name each "
+                + "one after whatever you've plugged into it.", true));
         three.addView(mini(c, "If you want the old one",
                 "Settings, then This launcher, then Home screen owner. It comes straight "
                 + "back.", true));
@@ -133,7 +133,7 @@ public class FirstBootActivity extends Activity {
         buttons.addView(grow);
 
         TextView once = new TextView(c);
-        once.setText("Shown once. Settings has it again under This launcher.");
+        once.setText("You’ll only see this once. It’s in Settings afterwards, under This launcher.");
         once.setTextColor(Ui.alphaWhite(0.58f));
         once.setTextSize(TypedValue.COMPLEX_UNIT_PX, Ui.sp(c, 19));
         once.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -228,12 +228,12 @@ public class FirstBootActivity extends Activity {
      */
     private void explainHowToGoBack() {
         new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                .setTitle("Putting the old home screen back")
-                .setMessage("The Google home screen is disabled, not removed. Turning it back on "
-                        + "has to be done from the TV's own settings, or from a computer with the "
-                        + "one command in the Lumen guide:\n\n"
+                .setTitle("Putting the Google home screen back")
+                .setMessage("The Google home screen is still installed. It was switched off, "
+                        + "and switching it back on has to happen either in the TV’s own "
+                        + "settings or from a computer, with this one command:\n\n"
                         + "adb shell pm enable com.google.android.apps.tv.launcherx\n\n"
-                        + "Nothing you have installed is affected either way.")
+                        + "Either way, none of your apps are touched.")
                 .setPositiveButton("Open the TV settings",
                         new android.content.DialogInterface.OnClickListener() {
                             public void onClick(android.content.DialogInterface d, int w) {

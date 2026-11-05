@@ -57,70 +57,76 @@ public class SettingsActivity extends Activity {
 
         Group home = new Group("What is on Home");
         home.add(new Opt(T_ACTION, "apps", "Apps on the shelf",
-                "Choose which apps appear, and in what order. Everything else stays in All apps.",
-                new String[]{ "Choose" }));
+                "Pick which apps are on the shelf and what order they go in. Everything else "
+                + "is still there, behind All apps.",
+                new String[]{ "Open" }));
         home.add(new Opt(T_CHOICE, "recents", "Carry on",
-                "What you were part-way through, above the shelf - one card each from your three "
-                + "most recent apps, showing the title, the episode and how far in you got. "
-                + "OK goes back to that exact point.",
+                "What you were part-way through, above the shelf. One card for each of your "
+                + "last few apps, with the title, the episode and how far in you got. OK takes "
+                + "you back to that exact point.",
                 new String[]{ "On", "Off" }));
         home.add(new Opt(T_CHOICE, "art", "Poster art",
-                "Artwork on the Carry on cards, downloaded from the app that put the row there. "
-                + "This is the only time Lumen uses the network. Off means it never does, and "
-                + "the cards show the app's own banner instead.",
+                "Artwork on the Carry on cards, fetched from the app that put the row there. "
+                + "It is the only thing Lumen downloads. Turn it off and it downloads nothing "
+                + "at all, and the cards fall back to each app's own banner.",
                 new String[]{ "On", "Off" }));
-        home.add(new Opt(T_CHOICE, "sources", "Sources strip",
-                "HDMI ports and the tuner, under the shelf.",
+        home.add(new Opt(T_CHOICE, "sources", "Inputs row",
+                "Your HDMI ports and the aerial, in a row under the shelf.",
                 new String[]{ "Visible", "Hidden" }));
+        home.add(new Opt(T_ACTION, "remote", "Your remote",
+                "The Netflix and Prime buttons stopped working when the TCL service behind "
+                + "them was switched off. Point them at whatever you like instead.",
+                new String[]{ "Open" }));
         home.add(new Opt(T_ACTION, "names_src", "Name your inputs",
                 "Call HDMI 2 \u201cPlayStation\u201d. The port number stays underneath, so you "
-                + "always know which socket you are switching to.",
+                + "can still tell which socket you're switching to.",
                 new String[]{ "Open" }));
         home.add(new Opt(T_CHOICE, "names", "App names",
-                "Names under every tile, or only under the one in focus.",
+                "Show a name under every tile, or only under the one you're on.",
                 new String[]{ "Always", "Focused only" }));
         g.add(home);
 
         Group look = new Group("How it looks");
         look.add(new Opt(T_CHOICE, "tile", "Tile size",
-                "Larger tiles, fewer per shelf. Sized for how far you sit from the screen.",
+                "Bigger tiles mean fewer on the shelf. Pick by how far back you watch from.",
                 Prefs.TILE_NAMES));
         look.add(new Opt(T_CHOICE, "glass", "Glass strength",
-                "How opaque the panels are. Lower is more transparent, not more blurred - "
-                + "this television has no blur to give.",
+                "How much of the picture shows through the panels. Android 11 on this set "
+                + "can't blur, so the panels stay sharp whatever you pick.",
                 new String[]{ "8%", "15%", "22%", "30%" }));
         look.add(new Opt(T_CHOICE, "bg", "Background",
-                "Adaptive takes its colour from the app in focus. The rest are fixed.",
+                "Adaptive takes its colour from whatever you're on. The rest stay put.",
                 Prefs.BG_NAMES));
         g.add(look);
 
         Group a11y = new Group("Easier to see and use");
         a11y.add(new Opt(T_CHOICE, "contrast", "High contrast",
-                "Darkens the panels and thickens the focus ring. Measured at 17.5:1 against "
-                + "8.3:1 normally.",
+                "Darkens everything behind the text and thickens the ring around whatever "
+                + "you're on, so it stays readable over bright artwork.",
                 new String[]{ "Off", "On" }));
         a11y.add(new Opt(T_CHOICE, "reduce", "Reduce motion",
-                "Removes the focus animation. Follows the TV's own animation scale when that "
-                + "is set to zero.",
+                "Stops things sliding and scaling as you move around. If you've already set "
+                + "the TV's own animation scale to zero, Lumen follows that on its own.",
                 new String[]{ "Off", "On" }));
         a11y.add(new Opt(T_CHOICE, "text", "Text size",
-                "Applies to names, the Carry on row and this screen.",
+                "Changes the app names, the Carry on row and this screen.",
                 Prefs.TEXT_NAMES));
         g.add(a11y);
 
         Group self = new Group("This launcher");
         self.add(new Opt(T_ACTION, "notice", "What changed on this TV",
-                "The plain-language notice shown the first time, and how to put the Google "
-                + "home screen back.",
+                "The notice you saw the first time, including how to put the Google home "
+                + "screen back.",
                 new String[]{ "Show" }));
         self.add(new Opt(T_ACTION, "export", "Save your settings",
-                "Writes a small file you can copy to another TV, or keep before a factory reset.",
-                new String[]{ "Export" }));
+                "Writes a small file you can copy to another TV, or keep hold of before a "
+                + "factory reset.",
+                new String[]{ "Save" }));
         self.add(new Opt(T_ACTION, "import", "Load saved settings",
-                "Reads that file back and applies everything in it.",
-                new String[]{ "Import" }));
+                "Reads that file back and puts everything in it into effect.",
+                new String[]{ "Load" }));
         self.add(new Opt(T_ACTION, "tv", "Open the TV settings",
-                "Picture, sound, network - everything this launcher does not own.",
+                "Picture, sound, network and everything else Lumen doesn't control.",
                 new String[]{ "Open" }));
         g.add(self);
 
@@ -178,8 +184,9 @@ public class SettingsActivity extends Activity {
 
         left.addView(kicker(c, "LAUNCHER"));
         left.addView(heading(c, "Settings"));
-        left.addView(body(c, "Every option shows its choices in a list. Nothing cycles on OK — "
-                + "you should never have to press a button four times to see what the options were."));
+        left.addView(body(c, "Every option shows you its choices. Nothing cycles on OK, so you "
+                + "never have to press a button four times to find out what you were choosing "
+                + "between."));
 
         groupList = new LinearLayout(c);
         groupList.setOrientation(LinearLayout.VERTICAL);
@@ -448,9 +455,9 @@ public class SettingsActivity extends Activity {
             }
             previewShelf.addView(t);
         }
-        previewNote.setText(hc ? "High contrast · measured 17.5:1"
-                              : "Normal · measured 8.3:1  ·  " + Prefs.tileName(c)
-                                + ", " + Prefs.tileWidth(c) + "px");
+        previewNote.setText(hc ? "High contrast  ·  " + Prefs.tileName(c) + " tiles"
+                              : Prefs.tileName(c) + " tiles  ·  "
+                                + Prefs.tileWidth(c) + "px wide");
     }
 
     private View footer(Context c) {
@@ -672,6 +679,10 @@ public class SettingsActivity extends Activity {
 
     private String currentValue(Opt o) {
         if (o.type == T_ACTION) {
+            if (o.key.equals("remote")) {
+                int n = RemoteMap.all(this).size();
+                return n == 0 ? "None set" : (n == 1 ? "1 button" : n + " buttons");
+            }
             if (o.key.equals("apps")) {
                 int total = AppEntry.loadAll(this).size();
                 return Prefs.shownCount(this, total) + " of " + total;
@@ -760,6 +771,8 @@ public class SettingsActivity extends Activity {
     private void doAction(Context c, Opt o) {
         if (o.key.equals("apps")) {
             startActivity(new Intent(this, AppsOnHomeActivity.class));
+        } else if (o.key.equals("remote")) {
+            startActivity(new Intent(this, RemoteActivity.class));
         } else if (o.key.equals("names_src")) {
             startActivity(new Intent(this, SourcesActivity.class));
         } else if (o.key.equals("notice")) {

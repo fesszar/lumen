@@ -108,7 +108,7 @@ public class AppsOnHomeActivity extends Activity {
         content.addView(instruction);
 
         // ---- on the shelf
-        content.addView(sectionLabel(c, "ON THE SHELF", "left to right, exactly as they appear on Home"));
+        content.addView(sectionLabel(c, "ON THE SHELF", "left to right, the order you’ll see on Home"));
 
         final FrameLayout panel = new FrameLayout(c);
         panel.setBackground(Ui.glass(c, Prefs.effectiveGlassAlpha(c), 34f, Prefs.highContrast(c)));
@@ -149,7 +149,7 @@ public class AppsOnHomeActivity extends Activity {
 
         // ---- everything else
         content.addView(sectionLabel(c, "EVERYTHING ELSE",
-                "still installed, still reachable from All apps"));
+                "still installed, and still in All apps"));
 
         restRow = new LinearLayout(c);
         restRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -291,15 +291,15 @@ public class AppsOnHomeActivity extends Activity {
     private void refreshChrome() {
         Context c = this;
         boolean moving = held >= 0;
-        modePill.setText(moving ? "Moving " + onShelf.get(held).label : "Press OK to move an app");
+        modePill.setText(moving ? "Moving " + onShelf.get(held).label : "OK picks an app up");
         modePill.setTextColor(moving ? Ui.GROUND : Ui.alphaWhite(0.88f));
         modePill.setBackground(Ui.roundRect(c, moving ? Color.WHITE : Ui.alphaWhite(0.10f),
                 999f, 1f, moving ? Color.WHITE : Ui.alphaWhite(0.22f)));
         instruction.setText(moving
-                ? "Left and right move the app you are holding; the others slide out of its way. "
-                  + "Press OK again to put it down."
+                ? "Left and right move the app you’re holding and the others get out of its "
+                  + "way. Press OK again to put it down."
                 : "Left and right walk along the shelf. OK picks an app up so you can move it. "
-                  + "Down goes to everything else, where OK puts an app back on the shelf.");
+                  + "Press down for everything else, where OK puts an app back on the shelf.");
         counter.setText(onShelf.size() + " of " + total + " on the shelf   ·   "
                 + offShelf.size() + " elsewhere");
     }

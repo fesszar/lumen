@@ -47,14 +47,14 @@ public final class WatchNext {
         public String status() {
             if (type == TYPE_CONTINUE && durationMs > 0 && positionMs > 0) {
                 long leftMs = durationMs - positionMs;
-                if (leftMs < 60000) return "Nearly finished";
+                if (leftMs < 60000) return "Almost done";
                 int mins = (int) Math.round(leftMs / 60000.0);
                 if (mins < 60) return mins + " minutes left";
                 int h = mins / 60, m = mins % 60;
                 return m == 0 ? h + (h == 1 ? " hour left" : " hours left")
                               : h + "h " + m + "m left";
             }
-            if (type == TYPE_NEXT) return "Next episode";
+            if (type == TYPE_NEXT) return "Next episode up";
             if (durationMs > 0) {
                 int mins = (int) Math.round(durationMs / 60000.0);
                 return mins + " minutes";

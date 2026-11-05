@@ -248,7 +248,7 @@ public class HomeActivity extends Activity {
 
         root.addView(col);
 
-        setStatus("Loading your apps");
+        setStatus("Finding your apps…");
         loadRailAsync(c);
         return root;
     }
@@ -297,13 +297,13 @@ public class HomeActivity extends Activity {
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         right.addView(barRow);
 
-        barRow.addView(barPill(c, "Apps", "All apps on this television", new Runnable() {
+        barRow.addView(barPill(c, "Apps", "Everything installed on this television", new Runnable() {
             public void run() { startActivity(new Intent(c, AllAppsActivity.class)); }
         }, false));
-        barRow.addView(barPill(c, "Inputs", "Name the HDMI sockets", new Runnable() {
+        barRow.addView(barPill(c, "Inputs", "Name your HDMI sockets", new Runnable() {
             public void run() { startActivity(new Intent(c, SourcesActivity.class)); }
         }, true));
-        barRow.addView(barPill(c, "Settings", "Lumen settings", new Runnable() {
+        barRow.addView(barPill(c, "Settings", "How this home screen behaves", new Runnable() {
             public void run() { startActivity(new Intent(c, SettingsActivity.class)); }
         }, true));
 
@@ -551,7 +551,7 @@ public class HomeActivity extends Activity {
             e.progress = it.progress();
             e.tint = app.tint;
             e.artUri = it.artUri;
-            e.ok = it.progress() > 0.01f ? "OK resumes it" : "OK starts it";
+            e.ok = it.progress() > 0.01f ? "OK picks it up here" : "OK starts it";
             entries.add(e);
         }
 
@@ -561,7 +561,7 @@ public class HomeActivity extends Activity {
             e.app = a;
             e.title = a.label;
             e.kicker = "APP";
-            e.sub = "Opens where you left it";
+            e.sub = "Opens wherever you left it";
             e.tint = a.tint;
             e.ok = "OK opens it";
             entries.add(e);
@@ -571,8 +571,8 @@ public class HomeActivity extends Activity {
         all.kind = KIND_ALL;
         all.title = "All apps";
         all.kicker = "EVERYTHING INSTALLED";
-        all.sub = "Nothing was removed from this television";
-        all.ok = "OK opens the full grid";
+        all.sub = "Everything installed, including what is not on the shelf";
+        all.ok = "OK shows them all";
         entries.add(all);
     }
 
@@ -612,7 +612,7 @@ public class HomeActivity extends Activity {
         } else if (e.kind == KIND_APP) {
             spoken = e.title + ". App. Press OK to open.";
         } else {
-            spoken = "All apps. Everything installed on this television. Press OK to open.";
+            spoken = "All apps. Everything installed on this television, including what is not on the shelf. Press OK to open.";
         }
         card.setContentDescription(spoken);
 
@@ -953,9 +953,9 @@ public class HomeActivity extends Activity {
         hintLine.setGravity(Gravity.CENTER_VERTICAL);
         hintLine.setLayoutParams(new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        hintLine.addView(hint(c, "◀▶", "Along the rail", false));
-        hintLine.addView(hint(c, "▲", "Apps, inputs, settings", true));
-        if (Prefs.sourcesVisible(c)) hintLine.addView(hint(c, "▼", "Switch input", true));
+        hintLine.addView(hint(c, "◀▶", "Along the row", false));
+        hintLine.addView(hint(c, "▲", "Apps, inputs and settings", true));
+        if (Prefs.sourcesVisible(c)) hintLine.addView(hint(c, "▼", "Your inputs", true));
         bar.addView(hintLine);
 
         statusLine = new TextView(c);
@@ -1062,7 +1062,7 @@ public class HomeActivity extends Activity {
                 }
                 if (plain != null) { try { startActivity(plain); return; } catch (Throwable ignored) { } }
                 launching = false;
-                setStatus("Cannot open that");
+                setStatus("That would not open");
             }
         }, 90);
     }
@@ -1071,8 +1071,8 @@ public class HomeActivity extends Activity {
         if (launching || app == null) return;
         Intent i = app.launchIntent(this);
         if (i == null) {
-            setStatus("Cannot open " + app.label);
-            announce("Cannot open " + app.label);
+            setStatus(app.label + " would not open");
+            announce(app.label + " would not open");
             ui.postDelayed(new Runnable() { public void run() { clearStatus(); } }, 2500);
             return;
         }
@@ -1086,7 +1086,7 @@ public class HomeActivity extends Activity {
         ui.postDelayed(new Runnable() {
             public void run() {
                 try { startActivity(go); }
-                catch (Throwable t) { launching = false; setStatus("Cannot open " + app.label); }
+                catch (Throwable t) { launching = false; setStatus(app.label + " would not open"); }
             }
         }, 90);
     }

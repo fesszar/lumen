@@ -261,8 +261,8 @@ public class AllAppsActivity extends Activity {
         if (launching) return;
         Intent i = app.launchIntent(this);
         if (i == null) {
-            setStatus("Cannot open " + app.label);
-            getWindow().getDecorView().announceForAccessibility("Cannot open " + app.label);
+            setStatus(app.label + " would not open");
+            getWindow().getDecorView().announceForAccessibility(app.label + " would not open");
             ui.postDelayed(new Runnable() { public void run() { clearStatus(); } }, 2500);
             return;
         }
@@ -285,7 +285,7 @@ public class AllAppsActivity extends Activity {
         ui.postDelayed(new Runnable() {
             public void run() {
                 try { startActivity(go); }
-                catch (Throwable t) { launching = false; setStatus("Cannot open " + app.label); }
+                catch (Throwable t) { launching = false; setStatus(app.label + " would not open"); }
             }
         }, 90);
     }
